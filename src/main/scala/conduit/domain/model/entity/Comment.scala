@@ -5,8 +5,20 @@ import conduit.domain.model.types.comment.{ CommentAuthorId, CommentBody, Commen
 
 import java.time.Instant
 
-case class Comment(id: CommentId, data: Comment.Data, metadata: Comment.Metadata)
+case class Comment(
+  id: CommentId, 
+  data: Comment.Data, 
+  metadata: Comment.Metadata
+)
 
 object Comment:
-  case class Data(article: ArticleId, body: CommentBody, author: CommentAuthorId)
-  case class Metadata(createdAt: Instant, updatedAt: Instant)
+  case class Metadata(
+    createdAt: Instant, 
+    updatedAt: Instant
+  )
+  
+  case class Data(
+    article: ArticleId, 
+    body: CommentBody, 
+    author: CommentAuthorId
+  )
