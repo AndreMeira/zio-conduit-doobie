@@ -8,10 +8,16 @@ import java.time.Instant
 case class Article(id: ArticleId, data: Article.Data, metadata: Article.Metadata)
 
 object Article:
-  case class Data(info: Info, body: ArticleBody)
+  // Inner entities
   case class Metadata(createdAt: Instant, updatedAt: Instant)
+  case class Data(slug: ArticleSlug, title: ArticleTitle, description: ArticleDescription, author: AuthorId, body: ArticleBody)
+
+  // Shrinked version of Article for overviews
   case class Info(slug: ArticleSlug, title: ArticleTitle, description: ArticleDescription, author: AuthorId)
-  case class Overview(id: ArticleId, info: Info, metadata: Metadata)
+
+  // Denormalized entities
+  case class Expanded(id: ArticleId, data: Article.Data, author: UserProfile, favoriteCount: ArticleFavoriteCount)
+  case class Overview(id: ArticleId, info: Article.Info, author: UserProfile, favoriteCount: ArticleFavoriteCount)
 
   enum Patch:
     case Title(value: ArticleTitle)
@@ -22,8 +28,8 @@ object Article:
     def title(value: String): Validation[ArticleTitle.Error, Patch.Title] =
       ArticleTitle.fromString(value).map(Patch.Title.apply)
 
-    def description(value: String): Validation[ArticleDescription.Error, ArticleDescription] =
-      ArticleDescription.fromString(value)
+    def description(value: String): Validation[ArticleDescription.Error, Patch.Description] =
+      ArticleDescription.fromString(value).map(Patch.Description.apply)
 
     def body(value: String): Validation[ArticleBody.Error, Patch.Body] =
       ArticleBody.fromString(value).map(Patch.Body.apply)
@@ -31,7 +37,7 @@ object Article:
   def patch(article: Article.Data, patches: List[Patch]): Article.Data =
     patches.foldLeft(article) { (data, patch) =>
       patch match
-        case Patch.Title(value)       => data.copy(info = data.info.copy(title = value))
-        case Patch.Description(value) => data.copy(info = data.info.copy(description = value))
+        case Patch.Title(value)       => data.copy(title = value)
+        case Patch.Description(value) => data.copy(description = value)
         case Patch.Body(value)        => data.copy(body = value)
     }

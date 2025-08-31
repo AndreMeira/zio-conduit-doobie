@@ -1,7 +1,7 @@
 package conduit.domain.model.types.user
 
 import conduit.domain.model.error.ApplicationError
-import zio.prelude.{Subtype, Validation}
+import zio.prelude.{ Subtype, Validation }
 
 type UserName = UserName.Type
 object UserName extends Subtype[String] {
@@ -12,11 +12,13 @@ object UserName extends Subtype[String] {
     validated(value.trim.replaceAll("\\s+", " "))
 
   def validated(value: String): Validation[UserName.Error, UserName] =
-    Validation.validate(
-      validateIsNotEmpty(value),
-      validateMinLength(value),
-      validateMaxLength(value)
-    ).map(_ => UserName(value))
+    Validation
+      .validate(
+        validateIsNotEmpty(value),
+        validateMinLength(value),
+        validateMaxLength(value),
+      )
+      .map(_ => UserName(value))
 
   private def validateIsNotEmpty(value: String): Validation[Error, Unit] =
     if value.isEmpty

@@ -1,5 +1,5 @@
 package conduit.domain.model.request.user
 
-import conduit.domain.model.entity.Requester
+import conduit.domain.model.entity.User
 
-case class GetUserRequest(requester: Requester)
+case class GetUserRequest(requester: User)

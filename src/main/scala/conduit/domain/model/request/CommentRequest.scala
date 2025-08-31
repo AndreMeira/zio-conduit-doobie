@@ -4,7 +4,4 @@ import conduit.domain.model.request.comment.*
 
 type CommentRequest = CommentRequest.Type
 object CommentRequest:
-  type Type = 
-    AddCommentRequest 
-    | DeleteCommentRequest 
-    | ListCommentsRequest
+  type Type = AddCommentRequest | DeleteCommentRequest | ListCommentsRequest

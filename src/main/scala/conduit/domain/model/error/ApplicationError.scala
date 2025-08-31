@@ -5,10 +5,10 @@ trait ApplicationError:
   def kind: String = this.getClass.getSimpleName
 
 object ApplicationError:
-  trait DomainError extends ApplicationError
-  trait TransientError extends ApplicationError
+  trait DomainError       extends ApplicationError
+  trait TransientError    extends ApplicationError
   trait UnauthorisedError extends ApplicationError
-  trait NotFoundError extends DomainError
+  trait NotFoundError     extends DomainError
 
   trait ValidationError extends DomainError:
     def key: String

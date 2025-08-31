@@ -1,7 +1,7 @@
 package conduit.domain.model.entity
 
 import conduit.domain.model.types.article.ArticleId
-import conduit.domain.model.types.comment.{CommentAuthorId, CommentBody, CommentId}
+import conduit.domain.model.types.comment.{ CommentAuthorId, CommentBody, CommentId }
 
 import java.time.Instant
 

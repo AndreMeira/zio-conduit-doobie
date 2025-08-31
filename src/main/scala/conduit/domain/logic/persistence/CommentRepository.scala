@@ -7,10 +7,12 @@ import conduit.domain.model.types.comment.CommentId
 import zio.ZIO
 
 trait CommentRepository[Tx] {
-  def find(commentId: CommentId): ZIO[Tx, CommentRepository.Error, Option[Comment]]
-  def save(comment: Comment.Data): ZIO[Tx, CommentRepository.Error, Comment]
-  def delete(commentId: CommentId): ZIO[Tx, CommentRepository.Error, Option[Comment]]
-  def findByArticle(article: ArticleId): ZIO[Tx, CommentRepository.Error, List[Comment]]
+  protected type Result[A] = ZIO[Tx, CommentRepository.Error, A] // for readability
+  
+  def find(commentId: CommentId): Result[Option[Comment]]
+  def save(comment: Comment.Data): Result[Comment]
+  def delete(commentId: CommentId): Result[Option[Comment]]
+  def findByArticle(article: ArticleId): Result[List[Comment]]
 }
 
 object CommentRepository:

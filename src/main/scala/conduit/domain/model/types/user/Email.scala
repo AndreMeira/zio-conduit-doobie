@@ -1,6 +1,6 @@
 package conduit.domain.model.types.user
 
-import zio.prelude.{Subtype, Validation}
+import zio.prelude.{ Subtype, Validation }
 
 type Email = Email.Type
 object Email extends Subtype[String] {

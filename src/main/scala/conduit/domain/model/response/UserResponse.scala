@@ -14,5 +14,5 @@ object UserResponse:
     case RegistrationRequest => AuthenticationResponse
     case UpdateUserRequest   => AuthenticationResponse
     case FollowUserRequest   => ProfileResponse
-    case GetProfileRequest    => ProfileResponse
+    case GetProfileRequest   => ProfileResponse
     case UnfollowUserRequest => ProfileResponse

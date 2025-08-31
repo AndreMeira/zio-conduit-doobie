@@ -1,7 +1,7 @@
 package conduit.domain.model.types.article
 
 import conduit.domain.model.error.ApplicationError
-import zio.prelude.{Subtype, Validation}
+import zio.prelude.{ Subtype, Validation }
 
 type ArticleTag = ArticleTag.Type
 object ArticleTag extends Subtype[String] {
@@ -19,6 +19,6 @@ object ArticleTag extends Subtype[String] {
 
   enum Error extends ApplicationError.ValidationError:
     case ArticleTagEmpty
-    override def key: String = "article tag"
+    override def key: String     = "article tag"
     override def message: String = "Article tag cannot be empty"
 }

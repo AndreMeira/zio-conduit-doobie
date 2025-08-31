@@ -5,9 +5,11 @@ import conduit.domain.model.error.ApplicationError
 import zio.ZIO
 
 trait FollowerRepository[Tx] {
-  def save(follower: Follower): ZIO[Tx, FollowerRepository.Error, Unit]
-  def delete(follower: Follower): ZIO[Tx, FollowerRepository.Error, Unit]
-  def exists(follower: Follower): ZIO[Tx, FollowerRepository.Error, Boolean]
+  protected type Result[A] = ZIO[Tx, FollowerRepository.Error, A] // for readability
+  
+  def save(follower: Follower): Result[Follower]
+  def delete(follower: Follower): Result[Option[Follower]]
+  def exists(follower: Follower): Result[Boolean]
 }
 
 object FollowerRepository:

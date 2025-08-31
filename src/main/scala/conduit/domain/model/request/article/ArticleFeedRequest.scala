@@ -1,5 +1,9 @@
 package conduit.domain.model.request.article
 
-import conduit.domain.model.entity.Requester
+import conduit.domain.model.entity.User
 
-case class ArticleFeedRequest(requester: Requester, offset: Int, limit: Int)
+case class ArticleFeedRequest(
+    requester: User,
+    offset: Int,
+    limit: Int,
+  )

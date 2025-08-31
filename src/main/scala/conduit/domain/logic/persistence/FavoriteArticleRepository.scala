@@ -6,10 +6,12 @@ import conduit.domain.model.types.article.*
 import zio.ZIO
 
 trait FavoriteArticleRepository[Tx] {
-  def save(favorite: FavoriteArticle): ZIO[Tx, FavoriteArticleRepository.Error, Unit]
-  def delete(favorite: FavoriteArticle): ZIO[Tx, FavoriteArticleRepository.Error, Unit]
-  def count(article: ArticleId): ZIO[Tx, FavoriteArticleRepository.Error, ArticleFavoriteCount]
-  def count(articles: List[ArticleId]): ZIO[Tx, FavoriteArticleRepository.Error, Map[ArticleId, ArticleFavoriteCount]]
+  protected type Result[A] = ZIO[Tx, FavoriteArticleRepository.Error, A] // for readability
+  
+  def save(favorite: FavoriteArticle): Result[FavoriteArticle]
+  def delete(favorite: FavoriteArticle): Result[Option[FavoriteArticle]]
+  def count(article: ArticleId): Result[ArticleFavoriteCount]
+  def count(articles: List[ArticleId]): Result[Map[ArticleId, ArticleFavoriteCount]]
 }
 
 object FavoriteArticleRepository:

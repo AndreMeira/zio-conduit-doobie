@@ -1,10 +1,10 @@
 package conduit.domain.model.types.article
 
 import conduit.domain.model.error.ApplicationError
-import zio.prelude.{Subtype, Validation}
+import zio.prelude.{ Subtype, Validation }
 
 type ArticleBody = ArticleBody.Type
-object ArticleBody extends Subtype[String]  {
+object ArticleBody extends Subtype[String] {
 
   def fromString(value: String): Validation[ArticleBody.Error, ArticleBody] =
     validated(value.trim)
@@ -19,6 +19,6 @@ object ArticleBody extends Subtype[String]  {
 
   enum Error extends ApplicationError.ValidationError:
     case ArticleBodyEmpty
-    override def key: String = "article body"
+    override def key: String     = "article body"
     override def message: String = "Article body cannot be empty"
 }
