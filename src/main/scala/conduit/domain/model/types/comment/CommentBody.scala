@@ -8,6 +8,9 @@ object CommentBody extends Subtype[String] {
   private val minLength = 3
   private val maxLength = 500
 
+  def fromString(body: String): Validation[Error, CommentBody] =
+    validated(body.trim)
+
   def validated(body: String): Validation[Error, CommentBody] =
     Validation
       .validate(

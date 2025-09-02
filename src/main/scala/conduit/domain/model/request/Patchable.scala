@@ -10,7 +10,7 @@ enum Patchable[+A]:
     case Empty          => Empty
     case Absent         => Absent
 
-  def asOption: Option[A] = this match
+  def option: Option[A] = this match
     case Present(value) => Some(value)
     case Empty          => None
     case Absent         => None

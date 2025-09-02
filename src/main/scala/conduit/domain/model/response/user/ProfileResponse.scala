@@ -1,11 +1,23 @@
 package conduit.domain.model.response.user
 
+import conduit.domain.model.entity.UserProfile
+
 case class ProfileResponse(profile: ProfileResponse.Payload)
 
 object ProfileResponse:
   case class Payload(
-      username: String,
-      bio: Option[String],
-      image: Option[String],
-      following: Boolean,
+    username: String,
+    bio: Option[String],
+    image: Option[String],
+    following: Boolean,
+  )
+
+  def make(user: UserProfile, following: Boolean): ProfileResponse =
+    ProfileResponse(
+      Payload(
+        username = user.data.name,
+        bio = user.data.bio,
+        image = user.data.image.map(_.toString),
+        following = following,
+      )
     )

@@ -6,10 +6,6 @@ enum User:
   case Anonymous
   case Authenticated(userId: UserId)
 
-  def isAuthenticated: Boolean = this match
-    case Anonymous        => false
-    case Authenticated(_) => true
-
-  def requesterId: Option[UserId] = this match
-    case Anonymous         => None
-    case Authenticated(id) => Some(id)
+  def option: Option[User.Authenticated] = this match
+    case User.Anonymous         => None
+    case User.Authenticated(id) => Some(Authenticated(id))

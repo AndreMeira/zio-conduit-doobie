@@ -2,7 +2,10 @@ package conduit.domain.model.request.user
 
 import conduit.domain.model.entity.User
 
-case class AuthenticateRequest(requester: User, payload: AuthenticateRequest.Payload)
+case class AuthenticateRequest(
+  requester: User.Anonymous.type,
+  payload: AuthenticateRequest.Payload,
+)
 
 object AuthenticateRequest:
   case class Payload(user: Data)                   // wrapping due to api spec

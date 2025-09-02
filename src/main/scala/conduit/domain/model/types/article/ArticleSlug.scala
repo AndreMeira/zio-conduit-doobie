@@ -9,11 +9,6 @@ import scala.util.chaining.scalaUtilChainingOps
 type ArticleSlug = ArticleSlug.Type
 object ArticleSlug extends Subtype[String] {
 
-  def withIndex(slug: ArticleSlug, index: ArticleSlugIndex): ArticleSlug =
-    index match
-      case 0     => ArticleSlug(s"$slug")
-      case index => ArticleSlug(s"$slug-$index")
-
   def fromTitle(title: ArticleTitle): Validation[ArticleSlug.Error, ArticleSlug] =
     fromString(title)
 

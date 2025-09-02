@@ -1,5 +1,6 @@
 package conduit.domain.model.types.user
 
+import conduit.domain.model.error.ApplicationError.ValidationError
 import zio.prelude.{ Subtype, Validation }
 
 type Password = Password.Type
@@ -56,7 +57,7 @@ object Password extends Subtype[String] {
     then Validation.fail(Error.PasswordMissingSpecialCharacter(specialCharacters))
     else Validation.succeed(())
 
-  enum Error:
+  enum Error extends ValidationError:
     case PasswordTooShort(minLength: Int)
     case PasswordTooLong(maxLength: Int)
     case PasswordContainsWhitespace

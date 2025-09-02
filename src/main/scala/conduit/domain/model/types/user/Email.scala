@@ -1,5 +1,6 @@
 package conduit.domain.model.types.user
 
+import conduit.domain.model.error.ApplicationError.ValidationError
 import zio.prelude.{ Subtype, Validation }
 
 type Email = Email.Type
@@ -14,6 +15,9 @@ object Email extends Subtype[String] {
     then Validation.succeed(Email(email.toLowerCase))
     else Validation.fail(Error.InvalidEmail(email))
 
-  enum Error:
+  enum Error extends ValidationError:
     case InvalidEmail(value: String)
+    override def key: String     = "email"
+    override def message: String = this match
+      case InvalidEmail(value) => s"$value is not a valid email address"
 }

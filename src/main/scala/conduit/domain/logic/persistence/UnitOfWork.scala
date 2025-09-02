@@ -4,5 +4,5 @@ import conduit.domain.model.error.ApplicationError
 import zio.ZIO
 
 trait UnitOfWork[Tx] {
-  def execute[R, A](effect: ZIO[R & Tx, ApplicationError, A]): ZIO[R, Throwable, A]
+  def execute[R, E <: ApplicationError, A](effect: ZIO[R & Tx, E, A]): ZIO[R, E, A]
 }

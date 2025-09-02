@@ -8,10 +8,11 @@ object ApplicationError:
   trait DomainError       extends ApplicationError
   trait TransientError    extends ApplicationError
   trait UnauthorisedError extends ApplicationError
-  trait NotFoundError     extends DomainError
+  trait IllegalStateError extends ApplicationError
+  trait NotFoundError     extends ValidationError
+
+  trait FromException(reason: Throwable) extends ApplicationError:
+    override def message: String = reason.getMessage
 
   trait ValidationError extends DomainError:
     def key: String
-
-  case class InvalidInput(errors: List[ValidationError]) extends DomainError:
-    override def message: String = errors.map(e => s"${e.key}: ${e.message}").mkString(", ")

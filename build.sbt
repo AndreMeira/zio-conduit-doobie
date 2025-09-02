@@ -39,7 +39,9 @@ lazy val root = project
       "dev.zio"              %% "zio-config-typesafe" % zioConfigVersion,
       "dev.zio"              %% "zio-config-magnolia" % zioConfigVersion,
 
-      // logging
+
+
+// logging
       "dev.zio"       %% "zio-logging"       % zioLoggingVersion,
       "dev.zio"       %% "zio-logging-slf4j" % zioLoggingVersion,
       "ch.qos.logback" % "logback-classic"   % logbackClassicVersion,

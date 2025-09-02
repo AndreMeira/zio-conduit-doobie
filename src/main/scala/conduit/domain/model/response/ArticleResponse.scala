@@ -6,7 +6,7 @@ import conduit.domain.model.response.article.*
 
 type ArticleResponse = ArticleResponse.Type
 object ArticleResponse:
-  type Type = GetArticleResponse | ArticleListResponse | DeleteArticleRequest | TagListResponse
+  type Type = GetArticleResponse | ArticleListResponse | DeleteArticleResponse | TagListResponse
 
   type Of[A <: ArticleRequest] = A match
     case CreateArticleRequest         => GetArticleResponse
@@ -14,6 +14,6 @@ object ArticleResponse:
     case GetArticleRequest            => GetArticleResponse
     case AddFavoriteArticleRequest    => GetArticleResponse
     case RemoveFavoriteArticleRequest => GetArticleResponse
-    case DeleteArticleRequest         => DeleteArticleRequest
+    case DeleteArticleRequest         => DeleteArticleResponse
     case ListArticlesRequest          => ArticleListResponse
     case ArticleFeedRequest           => ArticleListResponse

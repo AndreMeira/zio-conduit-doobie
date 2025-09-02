@@ -1,16 +1,14 @@
 package conduit.domain.logic.persistence
 
-import conduit.domain.model.entity.{ Credentials, User, UserProfile }
-import conduit.domain.model.error.ApplicationError
+import conduit.domain.model.entity.Credentials
+import conduit.domain.model.error.ApplicationError.TransientError
 import conduit.domain.model.types.user.UserId
 import zio.ZIO
 
 trait UserRepository[Tx] {
-  protected type Result[A] = ZIO[Tx, UserRepository.Error, A] // for readability
+  protected type Result[A] = ZIO[Tx, TransientError, A]
 
-  def save(credential: Credentials): Result[UserId]
-  def find(credential: Credentials): Result[Option[User]]
+  def exists(userId: UserId): Result[Boolean]
+  def save(credential: Credentials.Hashed): Result[UserId]
+  def find(credential: Credentials.Hashed): Result[Option[UserId]]
 }
-
-object UserRepository:
-  trait Error extends ApplicationError.TransientError
