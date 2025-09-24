@@ -5,7 +5,7 @@ import conduit.domain.model.types.article.AuthorId
 
 import scala.util.chaining.scalaUtilChainingOps
 
-class CommentListResponse(comments: List[GetCommentResponse.Payload])
+case class CommentListResponse(comments: List[GetCommentResponse.Payload])
 
 object CommentListResponse:
   def make(comments: List[Comment], profiles: List[UserProfile], followed: Set[AuthorId]): CommentListResponse =

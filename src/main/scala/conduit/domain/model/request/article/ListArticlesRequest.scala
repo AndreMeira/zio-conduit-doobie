@@ -16,11 +16,3 @@ object ListArticlesRequest:
     case Tag(name: String)
     case Author(username: String)
     case FavoriteOf(username: String)
-
-    // @todo move this to validation layer
-    def toSearchFilter(filters: List[Filter]): List[ArticleRepository.Search] =
-      filters.map {
-        case Filter.Tag(name)            => ArticleRepository.Search.Tag(name)
-        case Filter.Author(username)     => ArticleRepository.Search.Author(username)
-        case Filter.FavoriteOf(username) => ArticleRepository.Search.FavoriteOf(username)
-      }

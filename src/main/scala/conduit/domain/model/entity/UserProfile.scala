@@ -1,6 +1,6 @@
 package conduit.domain.model.entity
 
-import conduit.domain.model.types.user.{ Biography, HashedPassword, UserId, UserImage, UserName, Email as UserEmail }
+import conduit.domain.model.types.user.{ Biography, HashedPassword, UserId, UserImage, UserName }
 import zio.prelude.Validation
 
 import java.time.Instant
@@ -19,7 +19,6 @@ object UserProfile:
 
   case class Data(
     name: UserName,
-    email: UserEmail,
     bio: Option[Biography],
     image: Option[UserImage],
   )

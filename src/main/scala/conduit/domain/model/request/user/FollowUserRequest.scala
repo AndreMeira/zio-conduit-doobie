@@ -5,5 +5,5 @@ import conduit.domain.model.types.user.UserName
 
 case class FollowUserRequest(
   requester: User.Authenticated,
-  username: UserName,
+  username: String,
 )

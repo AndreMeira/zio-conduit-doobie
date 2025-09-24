@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+    <title>Timeline | groups | Nested Groups example</title>
+
+    <style>
+        body,
+        html {
+            font-family: arial, sans-serif;
+            font-size: 11pt;
+        }
+
+        #visualization {
+            box-sizing: border-box;
+            width: 100%;
+            height: 300px;
+        }
+    </style>
+
+    <!-- note: moment.js must be loaded before vis-timeline-graph2d or the embedded version of moment.js is used -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+
+    <script
+            type="text/javascript"
+            src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"
+    ></script>
+    <link
+            href="https://unpkg.com/vis-timeline@latest/styles/vis-timeline-graph2d.min.css"
+            rel="stylesheet"
+            type="text/css"
+    />
+    <style>
+        #visualization {
+            width: 100vw;
+            height: 100vh;
+            border: 1px solid lightgray;
+        }
+        .vis-item.vis-background {
+            color: black;
+        }
+        .vis-item {
+            background-color: #10B981;
+            border-color: #10B981;
+            color: white;
+        }
+        .vis-item.db-span {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+        .vis-item.error {
+            background-color: #EF4444;
+            border-color: #EF4444;
+        }
+    </style>
+</head>
+<body>
+<p>
+    This example demonstrate using groups. Note that a DataSet is used for
+    both items and groups, allowing to dynamically add, update or remove both
+    items and groups via the DataSet.
+</p>
+<div id="visualization"></div>
+
+<script>
+    (async () => {
+        const result = await fetch('http://localhost:8080/api/traces/last').then(res => res.json());
+        console.log("received", result)
+
+        const depth = (span) => {
+            if (span.children.length === 0) {
+                return 0;
+            } else {
+                return Math.max(...span.children.map(child => depth(child)).map(d => d + 1));
+            }
+        }
+
+        const callStack = new vis.DataSet();
+        callStack.add([{
+                id: 1,
+                content: "root",
+            },
+            ...Array(depth(result)).fill(null).map((_, i) => {
+                return {
+                    id: i + 2,
+                    content: `call depth ${i + 1}`,
+                }
+            })
+        ])
+
+        // console.log("callstack", depth(result), callStack)
+
+        const spans = new vis.DataSet();
+        const buildSpans = (span, level) => {
+            spans.add({
+                id: span.id.value,
+                group: level + 1,
+                content: `${span.data.name} (${span.timeline.duration} ms)`,
+                title: `${span.data.name} (${span.timeline.duration} ms)`,
+                start: moment(span.timeline.start),
+                end: moment(span.timeline.start).add(span.timeline.duration, 'milliseconds'),
+                type: level === 0 ? 'background' : 'range',
+                ...((span.data.tags?.resource === "db") ? { className: 'db-span' } : {}),
+            })
+            span.children.forEach(child => buildSpans(child, level + 1))
+        }
+
+        buildSpans(result, 0)
+        // console.log(spans)
+
+        // create visualization
+        var container = document.getElementById("visualization");
+        var options = {
+            groupOrder: "id", // groupOrder can be a property name or a sorting function
+        };
+
+        var timeline = new vis.Timeline(container, spans, callStack, options);
+    })();
+</script>
+</body>
+</html>

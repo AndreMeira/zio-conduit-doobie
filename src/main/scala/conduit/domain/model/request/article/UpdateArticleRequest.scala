@@ -6,8 +6,8 @@ import conduit.domain.model.types.article.ArticleSlug
 
 case class UpdateArticleRequest(
   requester: User.Authenticated,
+  slug: String,
   payload: UpdateArticleRequest.Payload,
-  article: ArticleSlug,
 )
 
 object UpdateArticleRequest:

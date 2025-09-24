@@ -7,13 +7,12 @@ import conduit.domain.model.types.user.{ SignedToken, UserId }
 import zio.ZIO
 
 trait TokenAuthenticator[Tx] {
-  type Error               = TokenAuthenticator.Failure | TransientError
+  type Error >: TokenAuthenticator.Failure <: ApplicationError
   protected type Result[A] = ZIO[Tx, Error, A]
 
   def user(token: Option[SignedToken]): Result[User]
   def generateToken(user: UserId): Result[SignedToken]
   def authenticate(token: SignedToken): Result[User.Authenticated]
-  def authenticate(token: Option[SignedToken]): Result[User.Authenticated]
 }
 
 object TokenAuthenticator:

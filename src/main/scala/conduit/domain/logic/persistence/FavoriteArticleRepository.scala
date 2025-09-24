@@ -8,10 +8,10 @@ import conduit.domain.model.types.user.UserId
 import zio.ZIO
 
 trait FavoriteArticleRepository[Tx] {
-  protected type Result[A] = ZIO[Tx, TransientError, A]
+  type Error <: ApplicationError
+  protected type Result[A] = ZIO[Tx, Error, A]
 
   def add(favorite: FavoriteArticle): Result[FavoriteArticle]
-  def save(favorite: FavoriteArticle): Result[FavoriteArticle]
   def delete(favorite: FavoriteArticle): Result[Option[FavoriteArticle]]
   def deleteByArticle(article: ArticleId): Result[Int] // number of deleted favorites
   def count(article: ArticleId): Result[ArticleFavoriteCount]

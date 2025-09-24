@@ -7,44 +7,31 @@ import conduit.domain.model.entity.User
 import conduit.domain.model.types.user.{ SignedToken, UserId }
 import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.{ Claims, JwtException, Jwts }
+import izumi.reflect.Tag as ReflectionTag
 import org.apache.commons.codec.digest.DigestUtils
-import zio.{ Clock, ZIO }
+import zio.{ Clock, ZIO, ZLayer }
 
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import scala.util.chaining.scalaUtilChainingOps
 
-class TokenAuthenticationService(
+class TokenAuthenticationService[Tx](
   monitor: Monitor,
   conf: TokenAuthenticationService.Config,
-) extends TokenAuthenticator[Any] {
+) extends TokenAuthenticator[Tx] {
 
-  override def generateToken(user: UserId): Result[SignedToken] =
-    monitor.track("TokenAuthenticationService.generateToken") {
-      Clock.currentTime(ChronoUnit.MILLIS).flatMap { current =>
-        ZIO
-          .attempt:
-            Jwts
-              .builder()
-              // @todo include issuer
-              .issuedAt(Date(current))
-              .subject(user.toString)
-              .expiration(Date(current + 3600000))
-              .signWith(Keys.hmacShaKeyFor(conf.tokenSalt.getBytes))
-              .compact()
-              .pipe(SignedToken(_))
-          .mapError(Failure.CanNotGenerateToken(_))
-      }
-    }
+  override type Error = TokenAuthenticator.Failure // can only fail with TokenAuthenticator.Failure
 
   override def user(token: Option[SignedToken]): Result[User] =
     monitor.track("TokenAuthenticationService.user") {
-      authenticate(token).catchSome {
-        case Failure.InvalidToken => ZIO.succeed(User.Anonymous)
-        case Failure.TokenExpired => ZIO.succeed(User.Anonymous)
-        case Failure.TokenMissing => ZIO.succeed(User.Anonymous)
-      }
+      token match
+        case Some(token) =>
+          authenticate(token).catchSome:
+            case Failure.InvalidToken => ZIO.succeed(User.Anonymous)
+            case Failure.TokenExpired => ZIO.succeed(User.Anonymous)
+            case Failure.TokenMissing => ZIO.succeed(User.Anonymous)
+        case None        => ZIO.succeed(User.Anonymous)
     }
 
   override def authenticate(token: SignedToken): Result[User.Authenticated] =
@@ -56,11 +43,22 @@ class TokenAuthenticationService(
       } yield User.Authenticated(userId)
     }
 
-  override def authenticate(token: Option[SignedToken]): Result[User.Authenticated] =
-    monitor.track("TokenAuthenticationService.authenticateOption") {
-      token match
-        case None        => ZIO.fail(Failure.TokenMissing)
-        case Some(token) => authenticate(token)
+  override def generateToken(user: UserId): Result[SignedToken] =
+    monitor.track("TokenAuthenticationService.generateToken") {
+      Clock.currentTime(ChronoUnit.MILLIS).flatMap { now =>
+        ZIO
+          .attempt:
+            Jwts
+              .builder()
+              // @todo include issuer
+              .issuedAt(Date(now))
+              .subject(user.toString)
+              .expiration(Date(now + 3600000))
+              .signWith(Keys.hmacShaKeyFor(conf.tokenSalt.getBytes))
+              .compact()
+              .pipe(SignedToken(_))
+          .mapError(Failure.CanNotGenerateToken(_))
+      }
     }
 
   private def decodeToken(token: SignedToken): Result[Claims] =
@@ -102,3 +100,11 @@ class TokenAuthenticationService(
 
 object TokenAuthenticationService:
   case class Config(passwordSalt: String, tokenSalt: String)
+
+  def layer[Tx: ReflectionTag]: ZLayer[Monitor & Config, Nothing, TokenAuthenticator[Tx]] =
+    ZLayer {
+      for {
+        monitor <- ZIO.service[Monitor]
+        config  <- ZIO.service[Config]
+      } yield TokenAuthenticationService(monitor, config)
+    }

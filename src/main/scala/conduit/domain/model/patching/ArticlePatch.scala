@@ -1,7 +1,7 @@
 package conduit.domain.model.patching
 
 import conduit.domain.model.entity.Article
-import conduit.domain.model.types.article.{ ArticleBody, ArticleDescription, ArticleTitle }
+import conduit.domain.model.types.article.{ ArticleBody, ArticleDescription, ArticleSlug, ArticleTitle }
 import zio.prelude.Validation
 
 /**
@@ -13,12 +13,14 @@ enum ArticlePatch:
   case Title(value: ArticleTitle)
   case Description(value: ArticleDescription)
   case Body(value: ArticleBody)
+  case Slug(value: ArticleSlug)
 
   def apply(data: Article.Data): Article.Data =
     this match
       case ArticlePatch.Body(value)        => data.copy(body = value)
       case ArticlePatch.Title(value)       => data.copy(title = value)
       case ArticlePatch.Description(value) => data.copy(description = value)
+      case ArticlePatch.Slug(value)        => data.copy(slug = value)
 
 object ArticlePatch:
   def apply(value: Article.Data, patches: List[ArticlePatch]): Article.Data =
@@ -35,3 +37,6 @@ object ArticlePatch:
 
   def body(value: String): Validation[ArticleBody.Error, ArticlePatch.Body] =
     ArticleBody.fromString(value).map(ArticlePatch.Body.apply)
+
+  def slug(value: String): Validation[ArticleSlug.Error, ArticlePatch.Slug] =
+    ArticleSlug.fromString(value).map(ArticlePatch.Slug.apply)

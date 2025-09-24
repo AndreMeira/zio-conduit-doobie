@@ -1,7 +1,7 @@
 package conduit.domain.model.response.article
 
 import conduit.domain.model.entity.{ Article, UserProfile }
-import conduit.domain.model.response.user.ProfileResponse
+import conduit.domain.model.response.user.GetProfileResponse
 
 case class GetArticleResponse(article: GetArticleResponse.Payload)
 
@@ -16,7 +16,7 @@ object GetArticleResponse:
     updatedAt: String,
     favorited: Boolean,
     favoritesCount: Int,
-    author: ProfileResponse.Payload,
+    author: GetProfileResponse.Payload,
   )
 
   def make(
@@ -34,6 +34,6 @@ object GetArticleResponse:
       updatedAt = article.metadata.updatedAt.toString,
       favorited = favorited,
       favoritesCount = article.favoriteCount,
-      author = ProfileResponse.make(article.author, following).profile,
+      author = GetProfileResponse.make(article.author, following).profile,
     )
   )

@@ -15,4 +15,6 @@ object CreateArticleRequest:
     description: String,
     body: String,
     tagList: Option[List[String]],
-  )
+  ) {
+    def tags: List[String] = tagList.getOrElse(Nil)
+  }

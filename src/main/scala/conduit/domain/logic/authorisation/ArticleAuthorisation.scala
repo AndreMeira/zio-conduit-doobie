@@ -1,9 +1,8 @@
 package conduit.domain.logic.authorisation
 
-import conduit.domain.model.entity.User
-import conduit.domain.model.error.ApplicationError.{ TransientError, UnauthorisedError }
+import conduit.domain.logic.authorisation.definition.Authorisation
+import conduit.domain.model.error.ApplicationError.UnauthorisedError
 import conduit.domain.model.request.ArticleRequest
-import zio.ZIO
 
 trait ArticleAuthorisation[Tx] extends Authorisation[Tx, ArticleRequest, ArticleAuthorisation.Failure]
 

@@ -1,7 +1,7 @@
 package conduit.domain.model.response.user
 
 import conduit.domain.model.entity.UserProfile
-import conduit.domain.model.types.user.SignedToken
+import conduit.domain.model.types.user.{ Email, SignedToken }
 
 case class AuthenticationResponse(user: AuthenticationResponse.Payload)
 
@@ -14,10 +14,10 @@ object AuthenticationResponse:
     image: Option[String],
   )
 
-  def make(profile: UserProfile, token: SignedToken): AuthenticationResponse =
+  def make(email: Email, profile: UserProfile, token: SignedToken): AuthenticationResponse =
     AuthenticationResponse(
       Payload(
-        email = profile.data.email,
+        email = email,
         token = token,
         username = profile.data.name,
         bio = profile.data.bio,

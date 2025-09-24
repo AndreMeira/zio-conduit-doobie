@@ -1,5 +1,6 @@
 package conduit.domain.logic.authorisation
 
+import conduit.domain.logic.authorisation.definition.Authorisation
 import conduit.domain.model.entity.User
 import conduit.domain.model.error.ApplicationError.{ TransientError, UnauthorisedError }
 import conduit.domain.model.request.UserRequest

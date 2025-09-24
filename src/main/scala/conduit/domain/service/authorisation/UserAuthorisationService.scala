@@ -6,12 +6,12 @@ import conduit.domain.logic.persistence.{ UserProfileRepository, UserRepository 
 import conduit.domain.model.entity.User
 import conduit.domain.model.request.UserRequest
 import conduit.domain.model.request.user.*
+import zio.{ ZIO, ZLayer }
+import izumi.reflect.Tag as ReflectionTag
 
-class UserAuthorisationService[Tx](
-  monitor: Monitor,
-  users: UserRepository[Tx],
-  profiles: UserProfileRepository[Tx],
-) extends UserAuthorisation[Tx] {
+class UserAuthorisationService[Tx](monitor: Monitor) extends UserAuthorisation[Tx] {
+
+  override type Error = Nothing // This service does not produce any errors
 
   override def authorise(request: UserRequest): Result =
     monitor.track("UserAuthorisationService.authorise") {
@@ -25,3 +25,9 @@ class UserAuthorisationService[Tx](
         case _: GetUserRequest      => allowed // Any authenticated user can view their own details
     }
 }
+
+object UserAuthorisationService:
+  def layer[Tx: ReflectionTag]: ZLayer[Monitor, Nothing, UserAuthorisation[Tx]] = ZLayer {
+    for monitor <- ZIO.service[Monitor]
+    yield UserAuthorisationService(monitor)
+  }

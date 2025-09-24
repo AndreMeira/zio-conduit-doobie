@@ -8,7 +8,8 @@ import conduit.domain.model.types.user.UserId
 import zio.ZIO
 
 trait FollowerRepository[Tx] {
-  protected type Result[A] = ZIO[Tx, TransientError, A]
+  type Error <: ApplicationError
+  protected type Result[A] = ZIO[Tx, Error, A]
 
   def save(follower: Follower): Result[Follower]
   def delete(follower: Follower): Result[Option[Follower]]

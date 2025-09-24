@@ -5,5 +5,5 @@ import conduit.domain.model.types.article.ArticleSlug
 
 case class RemoveFavoriteArticleRequest(
   requester: User.Authenticated,
-  article: ArticleSlug,
+  slug: String,
 )

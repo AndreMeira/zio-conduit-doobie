@@ -1,7 +1,8 @@
 package conduit.domain.service.authorisation
 
-import conduit.domain.logic.authorisation.{ Authorisation, CommentAuthorisation }
+import conduit.domain.logic.authorisation.CommentAuthorisation
 import conduit.domain.logic.authorisation.CommentAuthorisation.Failure
+import conduit.domain.logic.authorisation.definition.Authorisation
 import conduit.domain.logic.monitoring.Monitor
 import conduit.domain.logic.persistence.CommentRepository
 import conduit.domain.model.entity.User
@@ -10,11 +11,15 @@ import conduit.domain.model.request.comment.{ AddCommentRequest, DeleteCommentRe
 import conduit.domain.model.types.article.ArticleSlug
 import conduit.domain.model.types.comment.{ CommentAuthorId, CommentId }
 import zio.ZIO
+import zio.ZLayer
+import izumi.reflect.Tag as ReflectionTag
 
 class CommentAuthorisationService[Tx](
   monitor: Monitor,
-  comments: CommentRepository[Tx],
+  val comments: CommentRepository[Tx],
 ) extends CommentAuthorisation[Tx] {
+
+  override type Error = comments.Error // can only fail with same errors as the injected repository
 
   override def authorise(request: CommentRequest): Result =
     monitor.track("CommentAuthorisationService.authorise") {
@@ -26,10 +31,19 @@ class CommentAuthorisationService[Tx](
 
   private def canDeleteComment(request: DeleteCommentRequest): Result = {
     val author = CommentAuthorId(request.requester.userId)
-    val reason = s"Comment ${request.comment} does not belong to user ${request.requester.userId}"
-    comments.exists(request.comment, author).map {
+    val reason = s"Comment ${request.commentId} does not belong to user ${request.requester.userId}"
+    comments.exists(CommentId(request.commentId), author).map {
       case true  => Authorisation.Result.Allowed
-      case false => Authorisation.Result.NotAllowed(Failure.CanNotDeleteComment(reason))
+      case false => Authorisation.Result.Denied(Failure.CanNotDeleteComment(reason))
     }
   }
 }
+
+object CommentAuthorisationService:
+  def layer[Tx: ReflectionTag]: ZLayer[CommentRepository[Tx] & Monitor, Nothing, CommentAuthorisationService[Tx]] =
+    ZLayer {
+      for {
+        monitor  <- ZIO.service[Monitor]
+        comments <- ZIO.service[CommentRepository[Tx]]
+      } yield CommentAuthorisationService(monitor, comments)
+    }

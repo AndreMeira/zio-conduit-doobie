@@ -11,14 +11,12 @@ import zio.prelude.Validation
  */
 enum UserProfilePatch:
   case Name(value: UserName)
-  case Email(value: UserEmail)
   case Bio(value: Option[Biography])
   case Image(value: Option[UserImage])
 
   def apply(data: UserProfile.Data): UserProfile.Data =
     this match
       case UserProfilePatch.Name(value)  => data.copy(name = value)
-      case UserProfilePatch.Email(value) => data.copy(email = value)
       case UserProfilePatch.Bio(value)   => data.copy(bio = value)
       case UserProfilePatch.Image(value) => data.copy(image = value)
 
@@ -31,9 +29,6 @@ object UserProfilePatch:
 
   def name(value: String): Validation[UserName.Error, UserProfilePatch.Name] =
     UserName.fromString(value).map(UserProfilePatch.Name.apply)
-
-  def email(value: String): Validation[UserEmail.Error, UserProfilePatch.Email] =
-    UserEmail.fromString(value).map(UserProfilePatch.Email.apply)
 
   def bio(value: Option[String]): Validation[Biography.Error, UserProfilePatch.Bio] =
     value match

@@ -2,26 +2,24 @@ package conduit.domain.logic.persistence
 
 import conduit.domain.logic.persistence.ArticleRepository.Search
 import conduit.domain.model.entity.Article
-import conduit.domain.model.error.ApplicationError.TransientError
-import conduit.domain.model.types.article.{ ArticleId, ArticleSlug }
+import conduit.domain.model.error.ApplicationError
+import conduit.domain.model.types.article.{ ArticleId, ArticleSlug, ArticleTitle, AuthorId }
 import conduit.domain.model.types.user.UserId
 import zio.ZIO
 
 trait ArticleRepository[Tx] {
-  protected type Result[A] = ZIO[Tx, TransientError, A] // for readability
+  type Error <: ApplicationError
+  protected type Result[A] = ZIO[Tx, Error, A]
 
-  def save(article: Article): Result[Article.Expanded]
-  def save(article: Article.Data): Result[Article.Expanded]
-  def delete(articleId: ArticleSlug): Result[Option[Article]]
-  def exists(slug: ArticleSlug): Result[Boolean]
-  def exists(slug: ArticleSlug, authorId: UserId): Result[Boolean]
-  def findBySlug(slug: ArticleSlug): Result[Option[Article]]
-  def findById(id: ArticleId): Result[Option[Article]]
-  def findExpanded(slug: ArticleSlug): Result[Option[Article.Expanded]]
-  def feedOf(userId: UserId, limit: Int, offset: Int): Result[List[Article.Overview]]
-  def recent(filters: List[Search], limit: Int, offset: Int): Result[List[Article.Overview]]
+  def titleExists(title: ArticleTitle, authorId: AuthorId): Result[Boolean]
+  def find(id: ArticleId): Result[Option[Article.Expanded]]
+  def feedOf(userId: UserId, offset: Int, limit: Int): Result[List[Article.Overview]]
+  def search(filters: List[Search], offset: Int, limit: Int): Result[List[Article.Overview]]
   def countFeedOf(userId: UserId): Result[Int]
   def countSearch(filters: List[Search]): Result[Int]
+  def save(article: Article.Data): Result[Option[Article.Expanded]]
+  def save(articleId: ArticleId, article: Article.Data): Result[Option[Article.Expanded]]
+  def delete(articleId: ArticleId): Result[Option[Article]]
 }
 
 object ArticleRepository:

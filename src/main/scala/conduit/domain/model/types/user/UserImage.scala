@@ -1,27 +1,27 @@
 package conduit.domain.model.types.user
 
-import com.sun.jndi.toolkit.url.Uri
 import conduit.domain.model.error.ApplicationError
 import zio.prelude.{ Subtype, Validation }
 
+import java.net.URI
 import scala.util.chaining.scalaUtilChainingOps
 
 type UserImage = UserImage.Type
-object UserImage extends Subtype[Uri] {
+object UserImage extends Subtype[URI] {
 
-  def fromString(uri: String): Validation[UserImage.Error, UserImage] =
-    validateURI(uri.trim).map(UserImage(_))
+  def fromString(url: String): Validation[UserImage.Error, UserImage] =
+    validateURL(url.trim).map(UserImage(_))
 
-  def validateURI(uri: String): Validation[UserImage.Error, Uri] =
-    try Uri(uri).pipe(Validation.succeed)
-    catch case _: Exception => Validation.fail(Error.InvalidUri(uri))
+  def validateURL(url: String): Validation[UserImage.Error, URI] =
+    try URI(url).pipe(Validation.succeed)
+    catch case _: Exception => Validation.fail(Error.InvalidURL(url))
 
   enum Error extends ApplicationError.ValidationError:
-    case InvalidUri(value: String)
+    case InvalidURL(value: String)
 
     override def key: String = "user image"
 
     override def message: String = this match
-      case InvalidUri(value) => s"$value is not a valid URI"
+      case InvalidURL(value) => s"$value is not a valid URL"
 
 }

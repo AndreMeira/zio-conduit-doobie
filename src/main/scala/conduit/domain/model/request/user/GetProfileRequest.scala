@@ -5,5 +5,5 @@ import conduit.domain.model.types.user.UserName
 
 case class GetProfileRequest(
   requester: User,
-  username: UserName,
+  username: String,
 )

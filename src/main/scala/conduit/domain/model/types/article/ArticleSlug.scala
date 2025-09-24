@@ -9,6 +9,12 @@ import scala.util.chaining.scalaUtilChainingOps
 type ArticleSlug = ArticleSlug.Type
 object ArticleSlug extends Subtype[String] {
 
+  extension (slug: ArticleSlug) {
+    def appendIndex(index: Int): ArticleSlug =
+      if index <= 1 then slug
+      else ArticleSlug(s"${slug}_$index")
+  }
+
   def fromTitle(title: ArticleTitle): Validation[ArticleSlug.Error, ArticleSlug] =
     fromString(title)
 

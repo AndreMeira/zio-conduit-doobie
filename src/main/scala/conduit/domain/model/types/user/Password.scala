@@ -9,7 +9,7 @@ object Password extends Subtype[String] {
   private val maxLength         = 64
   private val specialCharacters = "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~"
 
-  def validated(value: String): Validation[Password.Error, Password] =
+  def fromString(value: String): Validation[Password.Error, Password] =
     Validation
       .validate(
         validateIsNotTooShort(value),

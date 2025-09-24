@@ -1,5 +1,11 @@
-@main def hello(): Unit =
-  println("Hello world!")
-  println(msg)
+import conduit.application.http.HttpApplication
+import conduit.application.migration.MigrationApplication
+import zio.*
 
-def msg = "I was compiled by Scala 3. :)"
+object Main extends ZIOAppDefault:
+  override def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
+    getArgs.flatMap:
+      case Chunk("http", "inmemory")    => HttpApplication.inmemory
+      case Chunk("http", "local")       => HttpApplication.local
+      case Chunk("database", "migrate") => MigrationApplication.run
+      case _                            => ZIO.logError("Please specify what to run")

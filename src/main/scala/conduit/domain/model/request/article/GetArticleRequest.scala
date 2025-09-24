@@ -5,5 +5,5 @@ import conduit.domain.model.types.article.ArticleSlug
 
 case class GetArticleRequest(
   requester: User,
-  article: ArticleSlug,
+  slug: String,
 )
