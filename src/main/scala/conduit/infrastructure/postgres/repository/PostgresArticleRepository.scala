@@ -104,8 +104,8 @@ class PostgresArticleRepository(monitor: Monitor) extends ArticleRepository[Tran
              |ia.slug, ia.title, ia.description, ia.author_id, ia.body, -- Article.Data
              |p.user_id, p.name, p.bio, p.image, p.created_at, p.updated_at, -- UserProfile.Data
              |ARRAY[]::TEXT[] as tags, -- Array[ArticleTag] empty on creation
-             |(SELECT count(*) FROM favorites f WHERE f.article_id = ia.id) as favorite_count, -- ArticleFavoriteCount
-             | ia.created_at, ia.updated_at -- Article.Metadata
+             |0 as favorite_count, -- ArticleFavoriteCount
+             |ia.created_at, ia.updated_at -- Article.Metadata
              |FROM inserted_article as ia
              |JOIN profiles p ON ia.author_id = p.user_id"""
           .stripMargin
@@ -150,7 +150,6 @@ class PostgresArticleRepository(monitor: Monitor) extends ArticleRepository[Tran
   override def search(filters: List[ArticleRepository.Search], offset: Int, limit: Int): Result[List[Article.Overview]] =
     monitor.track("PostgresArticleRepository.search", "resource" -> "db") {
       Transactional:
-        // @todo optimize this query
         sql"""SELECT
              |a.id, -- ArticleId
              |a.slug, a.title, a.description, a.author_id, -- Article.Data

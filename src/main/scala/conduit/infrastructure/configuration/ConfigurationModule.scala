@@ -32,6 +32,6 @@ object ConfigurationModule {
 
   private def load[A: ConfigReader: Tag](path: String): ZIO[Any, Throwable, A] =
     ZIO
-      .fromOption(ConfigSource.resources(path).load[A].toOption)
-      .orElseFail(new Exception(s"Failed to load config at $path"))
+      .fromEither(ConfigSource.resources(path).load[A])
+      .mapError(err => new RuntimeException(s"Failed to load config from $path: $err"))
 }

@@ -8,7 +8,7 @@ import org.testcontainers.utility.DockerImageName
 import zio.ZIO.acquireRelease
 import zio.*
 
-import java.time.Duration
+import scala.concurrent.duration.Duration
 
 object PostgresSpecLayers {
 
@@ -39,7 +39,7 @@ object PostgresSpecLayers {
         jdbcUrl = container.jdbcUrl,
         user = container.username,
         password = container.password,
-        connectionTimeout = Duration.ofSeconds(10),
+        connectionTimeout = Duration.create(60, "seconds"),
       )
     }
   }

@@ -21,6 +21,10 @@ object CredentialsAuthenticator:
     case InvalidCredentials                    extends Failure, UnauthorisedError
     case CanNotHashPassword(reason: Throwable) extends Failure, FromException(reason)
 
+    override def kind: String = this match
+      case InvalidCredentials    => "InvalidCredentials"
+      case CanNotHashPassword(_) => "CanNotHashPassword"
+
     override def message: String = this match
       case CanNotHashPassword(reason) => s"Can not hash password: ${reason.getMessage}"
       case InvalidCredentials         => "Invalid credentials provided"

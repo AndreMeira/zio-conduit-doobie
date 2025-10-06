@@ -23,6 +23,13 @@ object TokenAuthenticator:
     case DecodeError(reason: Throwable)         extends Failure, FromException(reason)
     case CanNotGenerateToken(reason: Throwable) extends Failure, FromException(reason)
 
+    override def kind: String = this match
+      case TokenMissing           => "TokenMissing"
+      case InvalidToken           => "InvalidToken"
+      case TokenExpired           => "TokenExpired"
+      case DecodeError(_)         => "DecodeError"
+      case CanNotGenerateToken(_) => "CanNotGenerateToken"
+
     override def message: String = this match
       case TokenMissing                => "Token is missing"
       case InvalidToken                => "Invalid token provided"

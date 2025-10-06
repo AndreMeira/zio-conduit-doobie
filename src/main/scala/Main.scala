@@ -7,5 +7,6 @@ object Main extends ZIOAppDefault:
     getArgs.flatMap:
       case Chunk("http", "inmemory")    => HttpApplication.inmemory
       case Chunk("http", "local")       => HttpApplication.local
+      case Chunk("http", "live")        => HttpApplication.live
       case Chunk("database", "migrate") => MigrationApplication.run
       case _                            => ZIO.logError("Please specify what to run")

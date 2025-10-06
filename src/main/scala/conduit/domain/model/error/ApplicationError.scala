@@ -2,7 +2,7 @@ package conduit.domain.model.error
 
 trait ApplicationError:
   def message: String
-  def kind: String              = this.getClass.getSimpleName
+  def kind: String              = getClass.getSimpleName
   override def toString: String = s"{kind: $kind, message: $message}"
 
 object ApplicationError:

@@ -178,6 +178,14 @@ object UserValidationService:
 
     override def key: String = "user"
 
+    override def kind: String = this match
+      case FollowSelf              => "FollowSelf"
+      case UnfollowSelf            => "UnfollowSelf"
+      case AuthorNotFound(_)       => "AuthorNotFound"
+      case EmailAlreadyInUse(_)    => "EmailAlreadyInUse"
+      case UserNameAlreadyInUse(_) => "UserNameAlreadyInUse"
+      case UserNotFound(_)         => "UserNotFound"
+
     override def message: String = this match
       case AuthorNotFound(username)       => s"User with username '$username' not found"
       case EmailAlreadyInUse(email)       => s"Email '$email' is already in use"

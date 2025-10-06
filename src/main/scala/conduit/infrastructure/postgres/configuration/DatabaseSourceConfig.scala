@@ -3,7 +3,7 @@ package conduit.infrastructure.postgres.configuration
 import com.zaxxer.hikari.HikariConfig
 
 import java.net.URI
-import java.time.Duration
+import scala.concurrent.duration.Duration
 
 case class DatabaseSourceConfig(
   jdbcUrl: String,
@@ -12,7 +12,7 @@ case class DatabaseSourceConfig(
   poolSize: Int = 10,
   connectionTestQuery: String = "SELECT 1",
   driverClass: String = "org.postgresql.Driver",
-  connectionTimeout: Duration = Duration.ofSeconds(60),
+  connectionTimeout: Duration = Duration.create(60, "seconds"),
 ) {
   def toHikariConfig: HikariConfig =
     val config = new HikariConfig()

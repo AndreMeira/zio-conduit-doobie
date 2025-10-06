@@ -68,6 +68,13 @@ class ArticleRoutes(auth: HttpAuth, parser: RequestParser, logic: ArticleEntrypo
           result  <- logic.run(UpdateArticleRequest(user, slug, payload))
         } yield Response.json(result.asJson.toString)
       },
+      
+      POST / "articles" / string("slug") / "favorite" -> handler { (slug: String, request: Request) =>
+        for {
+          user   <- auth.authenticated(request)
+          result <- logic.run(AddFavoriteArticleRequest(user, slug))
+        } yield Response.json(result.asJson.toString)
+      },
 
       // delete article
       DELETE / "articles" / string("slug") -> handler { (slug: String, request: Request) =>

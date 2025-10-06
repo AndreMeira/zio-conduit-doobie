@@ -15,9 +15,6 @@ object ArticleSlug extends Subtype[String] {
       else ArticleSlug(s"${slug}_$index")
   }
 
-  def fromTitle(title: ArticleTitle): Validation[ArticleSlug.Error, ArticleSlug] =
-    fromString(title)
-
   def fromString(value: String): Validation[ArticleSlug.Error, ArticleSlug] =
     normalize(value).pipe(validated)
 

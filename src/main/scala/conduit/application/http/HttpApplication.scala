@@ -1,11 +1,12 @@
 package conduit.application.http
 
-import conduit.application.http.middleware.{ ErrorMiddleware, MonitorMiddleware }
+import conduit.application.http.middleware.{ ErrorHandler, ErrorMiddleware, MonitorMiddleware }
 import conduit.application.http.route.*
 import conduit.domain.model.error.ApplicationError
 import conduit.domain.service.DomainServiceModule
 import conduit.infrastructure.configuration.ConfigurationModule
 import conduit.infrastructure.inmemory.InMemoryModule
+import conduit.infrastructure.opentelemetry.Module as OtelModule
 import conduit.infrastructure.inmemory.monitor.InMemoryMonitor
 import conduit.infrastructure.inmemory.repository.Transaction as MemoryTransaction
 import conduit.infrastructure.postgres.{ PostgresMigration, PostgresModule, Transaction as PostgresTransaction }
@@ -52,7 +53,7 @@ object HttpApplication extends ZIOAppDefault {
       } yield ()
     }.provide(
       HttpModule.layer,                               // application layer
-      InMemoryMonitor.layer,                          // monitoring layer
+      OtelModule.layer,                               // monitoring layer
       DomainServiceModule.layer[PostgresTransaction], // domain layer
       ConfigurationModule.http.layer,                 // configuration layer
       ConfigurationModule.postgres.layer,             // configuration layer
@@ -61,9 +62,29 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  def live: ZIO[Scope, Throwable, Unit] = ZIO.scoped {
+    {
+      for {
+        routes   <- routes
+        monitor  <- ZIO.service[MonitorMiddleware]
+        recover  <- ZIO.service[ErrorMiddleware]
+        allRoutes = recover(routes @@ monitor)
+        _        <- Server.serve(allRoutes).provide(Server.default)
+      } yield ()
+    }.provide(
+      HttpModule.layer,                               // application layer
+      OtelModule.layer,                               // monitoring layer
+      DomainServiceModule.layer[PostgresTransaction], // domain layer
+      ConfigurationModule.http.layer,                 // configuration layer
+      ConfigurationModule.postgres.layer,             // configuration layer
+      PostgresModule.layer,                           // infrastructure layer
+    )
+  }
+
   override def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     getArgs.flatMap:
       case Chunk("inmemory") => inmemory
       case Chunk("local")    => local
+      case Chunk("live")     => live
       case _                 => ZIO.logError("Please specify what to run")
 }

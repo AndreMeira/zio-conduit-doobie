@@ -32,6 +32,7 @@ object PostgresArticleSlugRepositorySpec extends ZIOSpec[PostgresUnitOfWork & Po
         } yield assertTrue(results.size == 10) &&
         assertTrue(distinct.size == 10) &&
         assertTrue(distinct.contains("concurrent-slug")) &&
+        assertTrue(distinct.contains("concurrent-slug_2")) &&
         assertTrue(distinct.contains("concurrent-slug_10"))
       }
     } @@ withMigration

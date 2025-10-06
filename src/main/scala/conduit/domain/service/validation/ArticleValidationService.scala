@@ -149,7 +149,9 @@ object ArticleValidationService:
   enum Invalid extends ValidationError {
     case ArticleAlreadyExists(title: ArticleTitle, authorId: AuthorId)
 
-    override def key: String     = "article validation"
+    override def key: String = this match
+      case ArticleAlreadyExists(_, _) => "article.title"
+
     override def message: String = this match
       case ArticleAlreadyExists(title, author) => s"Author '$author' already has an article with title '${title}'"
   }

@@ -16,6 +16,7 @@ val flywayVersion         = "11.13.1"
 val zioOtel               = "3.1.10"
 val javaOtel              = "1.54.1"
 val OtelSemconv           = "1.37.0"
+val javaOtelAgent         = "2.20.1"
 
 ThisBuild / organization := "com.andremeira"
 ThisBuild / scalaVersion := scala3Version
@@ -25,9 +26,20 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "zio-conduit-doobie",
+    scalaVersion := scala3Version,
     version := "0.1.0-SNAPSHOT",
 
-    scalaVersion := scala3Version,
+    javaAgents += "io.opentelemetry.javaagent" % "opentelemetry-javaagent" % javaOtelAgent % "compile;dist",
+
+    javaOptions ++= Seq(
+      "-Dotel.service.name=conduit-doobie",
+      "-Dotel.traces.exporter=otlp",
+      "-Dotel.metrics.exporter=otlp",
+      "-Dotel.logs.exporter=none",
+      "-Dotel.javaagent.debug=true",
+      "-Dotel.exporter.otlp.protocol=grpc",
+      "-Dotel.exporter.otlp.endpoint=http://localhost:4317",
+    ),
 
     libraryDependencies ++= Seq(
       // "io.getquill"   %% "quill-jdbc-zio"      % quillVersion,
@@ -90,4 +102,4 @@ lazy val root = project
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   )
-  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(JavaAppPackaging, JavaAgent)
