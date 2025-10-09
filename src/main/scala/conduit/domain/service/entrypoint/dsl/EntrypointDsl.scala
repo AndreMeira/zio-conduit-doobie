@@ -18,21 +18,17 @@ trait EntrypointDsl[Tx, Req, E <: UnauthorisedError](
         result <- logic
       } yield result
 
-  extension [R, E1, Err <: UnauthorisedError](zio: ZIO[R, E1, Authorisation.Result[Err]]) {
-    def allowedOrFail: ZIO[R, E1 | Err, Unit] = zio.flatMap {
+  extension [R, E1, Err <: UnauthorisedError](effect: ZIO[R, E1, Authorisation.Result[Err]]) {
+    def allowedOrFail: ZIO[R, E1 | Err, Unit] = effect.flatMap {
       case Authorisation.Result.Allowed   => ZIO.unit
       case Authorisation.Result.Denied(e) => ZIO.fail(e)
     }
   }
 
-  extension [R, E1, Err <: ValidationError, A](zio: ZIO[R, E1, Validation[Err, A]]) {
-    def validOrFail: ZIO[R, E1 | InvalidInput, A]                              = zio.flatMap {
+  extension [R, E1, Err <: ValidationError, A](effect: ZIO[R, E1, Validation[Err, A]]) {
+    def validOrFail: ZIO[R, E1 | InvalidInput, A] = effect.flatMap {
       case Validation.Success(_, a) => ZIO.succeed(a)
       case Validation.Failure(_, e) => ZIO.fail(InvalidInput(e.toList))
-    }
-    def validOrFailWith[E2 <: ApplicationError](error: E1): ZIO[R, E1 | E2, A] = zio.flatMap {
-      case Validation.Success(_, a) => ZIO.succeed(a)
-      case Validation.Failure(_, _) => ZIO.fail(error)
     }
   }
 

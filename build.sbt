@@ -22,6 +22,20 @@ ThisBuild / organization := "com.andremeira"
 ThisBuild / scalaVersion := scala3Version
 Test / parallelExecution := false
 
+def getConfig(key: String, default: String): String =
+  sys.env.getOrElse(key, sys.props.getOrElse(key.toLowerCase.replace("_", "."), default))
+
+def otelJavaOptions: Seq[String] = Seq(
+  s"-Dotel.logs.exporter=${getConfig("OTEL_LOGS_EXPORTER", "none")}",
+  s"-Dotel.service.name=${getConfig("OTEL_SERVICE_NAME", "conduit-doobie")}",
+  s"-Dotel.traces.exporter=${getConfig("OTEL_TRACES_EXPORTER", "otlp")}",
+  s"-Dotel.metrics.exporter=${getConfig("OTEL_METRICS_EXPORTER", "otlp")}",
+  s"-Dotel.javaagent.debug=${getConfig("OTEL_JAVAAGENT_DEBUG", "true")}",
+  s"-Dotel.exporter.otlp.protocol=${getConfig("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")}",
+  s"""-Dotel.exporter.otlp.endpoint=${getConfig("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")}""",
+)
+
+
 lazy val root = project
   .in(file("."))
   .settings(
@@ -31,15 +45,7 @@ lazy val root = project
 
     javaAgents += "io.opentelemetry.javaagent" % "opentelemetry-javaagent" % javaOtelAgent % "compile;dist",
 
-    javaOptions ++= Seq(
-      "-Dotel.service.name=conduit-doobie",
-      "-Dotel.traces.exporter=otlp",
-      "-Dotel.metrics.exporter=otlp",
-      "-Dotel.logs.exporter=none",
-      "-Dotel.javaagent.debug=true",
-      "-Dotel.exporter.otlp.protocol=grpc",
-      "-Dotel.exporter.otlp.endpoint=http://localhost:4317",
-    ),
+    javaOptions ++= otelJavaOptions,
 
     libraryDependencies ++= Seq(
       // "io.getquill"   %% "quill-jdbc-zio"      % quillVersion,

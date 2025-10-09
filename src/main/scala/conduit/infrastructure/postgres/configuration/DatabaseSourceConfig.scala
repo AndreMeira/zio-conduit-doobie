@@ -2,7 +2,6 @@ package conduit.infrastructure.postgres.configuration
 
 import com.zaxxer.hikari.HikariConfig
 
-import java.net.URI
 import scala.concurrent.duration.Duration
 
 case class DatabaseSourceConfig(
@@ -19,7 +18,8 @@ case class DatabaseSourceConfig(
     config.setJdbcUrl(jdbcUrl)
     config.setUsername(user)
     config.setPassword(password)
-    config.setMaximumPoolSize(poolSize)
+    config.setMinimumIdle(poolSize)
+    config.setMaximumPoolSize(poolSize * 2)
     config.setConnectionTestQuery(connectionTestQuery)
     config.setDriverClassName(driverClass)
     config.setConnectionTimeout(connectionTimeout.toMillis)

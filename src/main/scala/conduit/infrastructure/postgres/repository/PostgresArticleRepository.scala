@@ -63,18 +63,31 @@ class PostgresArticleRepository(monitor: Monitor) extends ArticleRepository[Tran
     monitor.track("PostgresArticleRepository.feedOf", "resource" -> "db") {
       Transactional:
         sql"""SELECT
-             |a.id, -- ArticleId
-             |a.slug, a.title, a.description, a.author_id, -- Article.Data
-             |p.user_id, p.name, p.bio, p.image, p.created_at, p.updated_at, -- UserProfile.Data
-             |ARRAY(SELECT name FROM tags t WHERE t.article_id = a.id) as tags, -- Array[ArticleTag]
-             |(SELECT count(fav.id) FROM favorites fav WHERE fav.article_id = a.id) as favorite_count, -- ArticleFavoriteCount
-             |a.created_at, a.updated_at -- Article.Metadata
+             | a.id,                                                          -- ArticleId
+             | a.slug, a.title, a.description, a.author_id,                   -- Article.Data
+             | p.user_id, p.name, p.bio, p.image, p.created_at, p.updated_at, -- UserProfile.Data
+             | COALESCE(tags.tag_list, '{}') AS tags,                         -- Array[ArticleTag]
+             | COALESCE(favs.favorite_count, 0) AS favorite_count,            -- ArticleFavoriteCount
+             | a.created_at, a.updated_at                                     -- Article.Metadata
              |FROM articles a
              |JOIN profiles p ON a.author_id = p.user_id
-             |JOIN followers f ON f.followee_id = a.author_id
-             |WHERE f.follower_id = $userId
+             |JOIN followers f ON f.followee_id = a.author_id AND f.follower_id = $userId
+             |
+             |-- Tags per article
+             |LEFT JOIN LATERAL (
+             | SELECT ARRAY_AGG(t.name) AS tag_list FROM tags t
+             | WHERE t.article_id = a.id AND t.name IS NOT NULL
+             |) tags ON TRUE
+             |
+             |-- Favorites per article
+             |LEFT JOIN LATERAL (
+             | SELECT COUNT(*) AS favorite_count FROM favorites fav
+             | WHERE fav.article_id = a.id
+             |) favs ON TRUE
+             |
              |ORDER BY a.created_at DESC
-             |OFFSET $offset LIMIT $limit"""
+             |OFFSET $offset LIMIT $limit;
+             |"""
           .stripMargin
           .query[Article.Overview]
           .to[List]
@@ -151,15 +164,24 @@ class PostgresArticleRepository(monitor: Monitor) extends ArticleRepository[Tran
     monitor.track("PostgresArticleRepository.search", "resource" -> "db") {
       Transactional:
         sql"""SELECT
-             |a.id, -- ArticleId
-             |a.slug, a.title, a.description, a.author_id, -- Article.Data
-             |p.user_id, p.name, p.bio, p.image, p.created_at, p.updated_at, -- UserProfile.Data
-             |ARRAY(SELECT name FROM tags t WHERE t.article_id = a.id) as tagList, -- Array[ArticleTag]
-             |(SELECT count(*) FROM favorites f WHERE f.article_id = a.id) as favorite_count, -- ArticleFavoriteCount
-             |a.created_at, a.updated_at -- Article.Metadata
+             |    a.id, a.slug, a.title, a.description, a.author_id,
+             |    p.user_id, p.name, p.bio, p.image, p.created_at, p.updated_at,
+             |    COALESCE(tags.tag_list, '{}') AS tagList,
+             |    COALESCE(favs.favorite_count, 0) AS favorite_count,
+             |    a.created_at, a.updated_at
              |FROM articles a
-             |INNER JOIN profiles p ON a.author_id = p.user_id
+             |JOIN profiles p ON a.author_id = p.user_id
              |${sqlJoinFilters(filters)}
+             |LEFT JOIN LATERAL (
+             |    SELECT ARRAY_AGG(t.name) AS tag_list
+             |    FROM tags t
+             |    WHERE t.article_id = a.id AND t.name IS NOT NULL
+             |) tags ON TRUE
+             |LEFT JOIN LATERAL (
+             |    SELECT COUNT(*) AS favorite_count
+             |    FROM favorites f
+             |    WHERE f.article_id = a.id
+             |) favs ON TRUE
              |ORDER BY a.created_at DESC
              |OFFSET $offset LIMIT $limit"""
           .stripMargin
@@ -182,14 +204,14 @@ class PostgresArticleRepository(monitor: Monitor) extends ArticleRepository[Tran
     filters
       .map:
         case Search.Tag(tag) =>
-          fr"INNER JOIN tags tf ON tf.article_id = a.id AND tf.name = $tag"
+          fr"INNER JOIN tags stf ON stf.article_id = a.id AND stf.name = $tag"
 
         case Search.Author(author) =>
-          fr"INNER JOIN profiles pfa ON pfa.user_id = a.author_id AND pfa.name = $author"
+          fr"INNER JOIN profiles spfa ON spfa.user_id = a.author_id AND spfa.name = $author"
 
         case Search.FavoriteOf(username) =>
-          fr"""INNER JOIN favorites fv ON fv.article_id = a.id
-              |INNER JOIN profiles pfv ON pfv.user_id = fv.user_id AND pfv.name = $username
+          fr"""INNER JOIN favorites sfv ON sfv.article_id = a.id
+              |INNER JOIN profiles spfv ON spfv.user_id = sfv.user_id AND spfv.name = $username
               """.stripMargin
       .foldLeft(fr"")(_ +~+ _)
 

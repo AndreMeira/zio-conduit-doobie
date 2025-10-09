@@ -1,6 +1,6 @@
 package conduit.application.http.route
 
-import conduit.application.http.route.TraceRoute.given
+import conduit.application.http.route.InMemoryTraceRoute.given
 import conduit.domain.logic.monitoring.Monitor
 import conduit.infrastructure.inmemory.monitor.{ InMemoryMonitor, Span }
 import io.circe.Encoder
@@ -13,7 +13,7 @@ import zio.http.{ Request, Response, Routes, Status, handler }
 
 import java.time.Duration
 
-class TraceRoute(monitor: Monitor) {
+class InMemoryTraceRoute(monitor: Monitor) {
   def routes: Routes[Any, Nothing] =
     literal("api") / Routes(
       // get traces
@@ -39,7 +39,7 @@ class TraceRoute(monitor: Monitor) {
     }
 }
 
-object TraceRoute:
+object InMemoryTraceRoute:
   given Encoder[Span]          = encoder
   given Encoder[Span.Id]       = encoder
   given Encoder[Span.Data]     = encoder
@@ -49,5 +49,5 @@ object TraceRoute:
   val layer = ZLayer {
     for {
       monitor <- ZIO.service[Monitor]
-    } yield new TraceRoute(monitor)
+    } yield new InMemoryTraceRoute(monitor)
   }

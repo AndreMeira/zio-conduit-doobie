@@ -41,6 +41,29 @@ object PostgresFavoriteArticleRepositorySpec extends ZIOSpec[PostgresUnitOfWork 
         } yield assertTrue(isFav)
     } @@ withMigration
 
+    test("adding a favorite twice is idempotent") {
+      transaction:
+        for {
+          credsOne   <- Generator.credentials.runHead.map(_.get)
+          credsTwo   <- Generator.credentials.runHead.map(_.get)
+          article    <- Generator.articleData.runHead.map(_.get)
+          profileOne <- Generator.profileData.runHead.map(_.get)
+          profileTwo <- Generator.profileData.runHead.map(_.get)
+
+          userIdOne <- users.save(credsOne)
+          userIdTwo <- users.save(credsTwo)
+          _         <- profiles.create(userIdOne, profileOne)
+          _         <- profiles.create(userIdTwo, profileTwo)
+
+          newArticle = article.copy(author = AuthorId(userIdOne))
+          created   <- articles.save(newArticle).someOrFail(ArticleNotCreated)
+          favorite   = FavoriteArticle(by = userIdTwo, article = created.id)
+          _         <- favorites.add(favorite)
+          _         <- favorites.add(favorite) // add again
+          isFav     <- favorites.exists(favorite)
+        } yield assertTrue(isFav)
+    } @@ withMigration
+
     test("delete a favorite article") {
       transaction:
         for {

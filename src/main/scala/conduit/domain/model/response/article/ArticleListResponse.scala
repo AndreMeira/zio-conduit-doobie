@@ -38,5 +38,5 @@ object ArticleListResponse:
         author = GetProfileResponse.make(article.author, followed.contains(AuthorId(article.author.id))).profile,
       )
     },
-    articlesCount = articles.length,
+    articlesCount = count,
   )

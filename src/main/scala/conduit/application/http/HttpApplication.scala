@@ -1,18 +1,17 @@
 package conduit.application.http
 
-import conduit.application.http.middleware.{ ErrorHandler, ErrorMiddleware, MonitorMiddleware }
+import conduit.application.http.middleware.{ErrorMiddleware, MonitorMiddleware}
 import conduit.application.http.route.*
 import conduit.domain.model.error.ApplicationError
 import conduit.domain.service.DomainServiceModule
 import conduit.infrastructure.configuration.ConfigurationModule
 import conduit.infrastructure.inmemory.InMemoryModule
-import conduit.infrastructure.opentelemetry.Module as OtelModule
-import conduit.infrastructure.inmemory.monitor.InMemoryMonitor
 import conduit.infrastructure.inmemory.repository.Transaction as MemoryTransaction
-import conduit.infrastructure.postgres.{ PostgresMigration, PostgresModule, Transaction as PostgresTransaction }
+import conduit.infrastructure.opentelemetry.Module as OtelModule
+import conduit.infrastructure.postgres.{PostgresMigration, PostgresModule, Transaction as PostgresTransaction}
 import izumi.reflect.Tag as ReflectionTag
-import zio.http.{ Middleware, Routes, Server }
 import zio.*
+import zio.http.{Middleware, Routes, Server}
 
 object HttpApplication extends ZIOAppDefault {
   def routes: ZIO[UserRoutes & ArticleRoutes & CommentRoutes, Nothing, Routes[Any, ApplicationError]] =
@@ -26,11 +25,11 @@ object HttpApplication extends ZIOAppDefault {
     {
       for {
         routes   <- routes
-        traces   <- ZIO.service[TraceRoute]
+        traces   <- ZIO.service[InMemoryTraceRoute]
         monitor  <- ZIO.service[MonitorMiddleware]
         recover  <- ZIO.service[ErrorMiddleware]
         allRoutes = recover(routes @@ monitor) ++ (traces.routes @@ Middleware.cors)
-        _        <- Server.serve(allRoutes).provide(Server.default)
+        _        <- Server.serve(allRoutes)
       } yield ()
     }.provide(
       HttpModule.layer,                             // application layer
@@ -39,6 +38,9 @@ object HttpApplication extends ZIOAppDefault {
       ConfigurationModule.http.layer,               // configuration layer
     )
   }
+
+  def local2: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] =
+    migration *> live
 
   def local: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] = ZIO.scoped {
     {
@@ -49,7 +51,7 @@ object HttpApplication extends ZIOAppDefault {
         monitor   <- ZIO.service[MonitorMiddleware]
         recover   <- ZIO.service[ErrorMiddleware]
         allRoutes  = recover(routes @@ monitor)
-        _         <- Server.serve(allRoutes).provide(Server.default)
+        _         <- Server.serve(allRoutes)
       } yield ()
     }.provide(
       HttpModule.layer,                               // application layer
@@ -62,6 +64,19 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  def migration: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] = ZIO.scoped {
+    {
+      for {
+        migration <- ZIO.service[PostgresMigration]
+        _         <- migration.applyMigrations
+      } yield ()
+    }.provide(
+      OtelModule.layer,                   // monitoring layer
+      ConfigurationModule.postgres.layer, // configuration layer
+      PostgresModule.migration.layer      // migration layer
+    )
+  }
+
   def live: ZIO[Scope, Throwable, Unit] = ZIO.scoped {
     {
       for {
@@ -69,7 +84,7 @@ object HttpApplication extends ZIOAppDefault {
         monitor  <- ZIO.service[MonitorMiddleware]
         recover  <- ZIO.service[ErrorMiddleware]
         allRoutes = recover(routes @@ monitor)
-        _        <- Server.serve(allRoutes).provide(Server.default)
+        _        <- Server.serve(allRoutes)
       } yield ()
     }.provide(
       HttpModule.layer,                               // application layer
@@ -83,8 +98,9 @@ object HttpApplication extends ZIOAppDefault {
 
   override def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     getArgs.flatMap:
-      case Chunk("inmemory") => inmemory
-      case Chunk("local")    => local
-      case Chunk("live")     => live
-      case _                 => ZIO.logError("Please specify what to run")
+      case Chunk("inmemory")  => inmemory
+      case Chunk("local")     => local2
+      case Chunk("migration") => migration
+      case Chunk("live")      => live
+      case _                  => ZIO.logError("Please specify what to run")
 }
