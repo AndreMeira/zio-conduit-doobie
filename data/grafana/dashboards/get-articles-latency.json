@@ -106,7 +106,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "prometheus"
           },
           "expr": "histogram_quantile(0.5, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
@@ -115,7 +115,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "prometheus"
           },
           "expr": "histogram_quantile(0.95, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
@@ -124,7 +124,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "prometheus"
           },
           "expr": "histogram_quantile(0.99, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
