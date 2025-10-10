@@ -23,8 +23,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "bf088c51243cwb"
+        "type": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -108,7 +107,6 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "bf088c51243cwb"
           },
           "expr": "histogram_quantile(0.5, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
@@ -118,7 +116,6 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "bf088c51243cwb"
           },
           "expr": "histogram_quantile(0.95, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
@@ -128,7 +125,6 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "bf088c51243cwb"
           },
           "expr": "histogram_quantile(0.99, rate(conduit_latency_articleendpoint_recent_milliseconds_bucket[5m]))",
           "interval": "",
@@ -154,6 +150,5 @@
   "timepicker": {},
   "timezone": "",
   "title": "Recent Articles Endpoint Latency",
-  "uid": "a4572413-30a0-49b8-85ad-c98230149c80",
   "version": 8
 }

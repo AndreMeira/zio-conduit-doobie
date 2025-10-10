@@ -23,8 +23,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "bf088c51243cwb"
+        "type": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -107,8 +106,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "bf088c51243cwb"
+            "type": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(rate(conduit_latency_articleendpoint_create_milliseconds_count[1m]))",
@@ -136,6 +134,5 @@
   "timepicker": {},
   "timezone": "",
   "title": "Create Articles Endpoint Request Rate",
-  "uid": "c2aedb2c-8681-418a-a0e1-9aa62c8916dd",
   "version": 1
 }
