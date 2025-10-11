@@ -9,9 +9,6 @@ object ArticleFavoriteCount extends Subtype[Int] {
   def fromInt(value: Int): Validation[Error, ArticleFavoriteCount] =
     validated(value)
 
-  def fromIntOrZero(value: Int): ArticleFavoriteCount =
-    fromInt(value).getOrElse(ArticleFavoriteCount(0))
-
   def validated(value: Int): Validation[ArticleFavoriteCount.Error, ArticleFavoriteCount] =
     validatedIsNotNegative(value).map(_ => ArticleFavoriteCount(value))
 
