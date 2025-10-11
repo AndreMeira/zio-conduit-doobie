@@ -12,15 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Setup sbt
-        uses: actions/setup-java@v3
+      - name: Set up JDK 23 (Temurin)
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '23'
-      - name: Install sbt
-        uses: olafurpg/setup-scala@v13
-        with:
-          sbt-version: '1.9.8' # set your required sbt version
+          java-version: '23.0.2'
+          cache: 'sbt'
+      - name: Install sbt 1.9.8
+        run: |
+          curl -L -o sbt.deb https://repo.scala-sbt.org/scalasbt/debian/sbt-1.9.8.deb
+          sudo dpkg -i sbt.deb
+          sbt sbtVersion
       - name: Run tests
-        id: test
         run: sbt -v test
