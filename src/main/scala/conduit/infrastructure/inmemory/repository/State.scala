@@ -4,7 +4,7 @@ import conduit.domain.model.entity.{ Article, Comment, Credentials, UserProfile 
 import conduit.domain.model.types.article.{ ArticleId, ArticleSlug, ArticleTag }
 import conduit.domain.model.types.comment.CommentId
 import conduit.domain.model.types.user.UserId
-import zio.{ Ref, ZIO }
+import zio.{ Ref, Semaphore, ZIO }
 
 class State(
   val idSeq: Ref[Long],
@@ -17,11 +17,12 @@ class State(
   val tags: Ref[Map[ArticleId, List[ArticleTag]]],
   val users: Ref[Map[UserId, Credentials.Hashed]],
   val profiles: Ref[Map[UserId, UserProfile]],
+  val lock: Semaphore,
 ) {
   def nextId: ZIO[Any, Nothing, Long] =
     idSeq.updateAndGet(_ + 1L)
 
-  def duplicate: ZIO[Any, Nothing, State] =
+  def duplicate: ZIO[Any, Nothing, State] = lock.withPermit:
     for {
       articles   <- articles.get.flatMap(Ref.make)
       slugs      <- slugs.get.flatMap(Ref.make)
@@ -32,9 +33,9 @@ class State(
       tags       <- tags.get.flatMap(Ref.make)
       users      <- users.get.flatMap(Ref.make)
       profiles   <- profiles.get.flatMap(Ref.make)
-    } yield State(idSeq, articles, slugs, favorites, followers, comments, permalinks, tags, users, profiles)
+    } yield State(idSeq, articles, slugs, favorites, followers, comments, permalinks, tags, users, profiles, lock)
 
-  def merge(other: State): ZIO[Any, Nothing, Unit] =
+  def merge(other: State): ZIO[Any, Nothing, Unit] = lock.withPermit:
     for {
       _ <- other.articles.get.flatMap(other => articles.update(_ ++ other))
       _ <- other.slugs.get.flatMap(other => slugs.update(_ ++ other))
@@ -61,4 +62,5 @@ object State:
       tags       <- Ref.make(Map.empty[ArticleId, List[ArticleTag]])
       users      <- Ref.make(Map.empty[UserId, Credentials.Hashed])
       profiles   <- Ref.make(Map.empty[UserId, UserProfile])
-    } yield State(idSeq, articles, slugs, favorites, followers, comments, permalinks, tags, users, profiles)
+      lock       <- Semaphore.make(1)
+    } yield State(idSeq, articles, slugs, favorites, followers, comments, permalinks, tags, users, profiles, lock)

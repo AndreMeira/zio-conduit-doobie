@@ -3,9 +3,9 @@ package conduit.application.migration
 import conduit.domain.logic.monitoring.Monitor
 import conduit.domain.model.error.ApplicationError
 import conduit.infrastructure.configuration.ConfigurationModule
-import conduit.infrastructure.opentelemetry.{OpenTelemetryMonitor, Module as OtelModule}
-import conduit.infrastructure.postgres.{PostgresMigration, PostgresModule}
-import zio.{Scope, ZIO, ZIOAppDefault, ZLayer}
+import conduit.infrastructure.opentelemetry.{ OpenTelemetryMonitor, Module as OtelModule }
+import conduit.infrastructure.postgres.{ PostgresMigration, PostgresModule }
+import zio.{ Scope, ZIO, ZIOAppDefault, ZLayer }
 
 object MigrationApplication extends ZIOAppDefault {
 

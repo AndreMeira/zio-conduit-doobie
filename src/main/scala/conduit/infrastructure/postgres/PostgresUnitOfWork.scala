@@ -26,27 +26,27 @@ class PostgresUnitOfWork(
         .mapError(Transaction.Error(_))
     }
 
-  private def commit: (Transaction, Exit[Any, Any]) => ZIO[Any, Nothing, Unit] = (tx, exit) =>
+  private def commit(transaction: Transaction, exit: Exit[Any, Any]): ZIO[Any, Nothing, Unit] =
     monitor
       .track("PostgresUnitOfWork.commit", "resource" -> "db") {
-        tx -> exit match {
-          case (transaction, Exit.Success(_)) =>
+        exit match {
+          case Exit.Success(_) =>
             ZIO.attemptBlocking {
               transaction.connection.commit()
               transaction.connection.close()
             }
-          case (transaction, Exit.Failure(e)) =>
+          case Exit.Failure(e) =>
             ZIO.attemptBlocking {
               transaction.connection.rollback()
               transaction.connection.close()
             } *> ZIO.logError(s"Transaction failed, rolling back: $e")
         }
       }
+      .tapError(err => ZIO.logError(s"$err"))
       .ignore
 }
 
 object PostgresUnitOfWork {
-
   val layer = ZLayer.scoped {
     for {
       datasource <- ZIO.service[HikariDataSource]

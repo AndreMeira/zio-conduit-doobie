@@ -1,6 +1,6 @@
 package conduit.application.http
 
-import conduit.application.http.middleware.{ErrorMiddleware, MonitorMiddleware}
+import conduit.application.http.middleware.{ ErrorMiddleware, MonitorMiddleware }
 import conduit.application.http.route.*
 import conduit.domain.model.error.ApplicationError
 import conduit.domain.service.DomainServiceModule
@@ -8,10 +8,10 @@ import conduit.infrastructure.configuration.ConfigurationModule
 import conduit.infrastructure.inmemory.InMemoryModule
 import conduit.infrastructure.inmemory.repository.Transaction as MemoryTransaction
 import conduit.infrastructure.opentelemetry.Module as OtelModule
-import conduit.infrastructure.postgres.{PostgresMigration, PostgresModule, Transaction as PostgresTransaction}
+import conduit.infrastructure.postgres.{ PostgresMigration, PostgresModule, Transaction as PostgresTransaction }
 import izumi.reflect.Tag as ReflectionTag
 import zio.*
-import zio.http.{Middleware, Routes, Server}
+import zio.http.{ Middleware, Routes, Server }
 
 object HttpApplication extends ZIOAppDefault {
   def routes: ZIO[UserRoutes & ArticleRoutes & CommentRoutes, Nothing, Routes[Any, ApplicationError]] =
@@ -73,7 +73,7 @@ object HttpApplication extends ZIOAppDefault {
     }.provide(
       OtelModule.layer,                   // monitoring layer
       ConfigurationModule.postgres.layer, // configuration layer
-      PostgresModule.migration.layer      // migration layer
+      PostgresModule.migration.layer,     // migration layer
     )
   }
 

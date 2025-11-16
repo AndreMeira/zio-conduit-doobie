@@ -1,8 +1,8 @@
 package conduit.application.http
 
-import conduit.application.http.middleware.{ErrorMiddleware, MonitorMiddleware}
-import conduit.application.http.route.{ArticleRoutes, CommentRoutes, InMemoryTraceRoute, UserRoutes}
-import conduit.application.http.service.{HttpAuth, RequestParser}
+import conduit.application.http.middleware.{ ErrorMiddleware, MonitorMiddleware }
+import conduit.application.http.route.{ ArticleRoutes, CommentRoutes, InMemoryTraceRoute, UserRoutes }
+import conduit.application.http.service.{ HttpAuth, RequestParser }
 import zio.http.Server
 
 object HttpModule {

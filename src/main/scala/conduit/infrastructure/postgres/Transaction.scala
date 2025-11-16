@@ -27,7 +27,7 @@ object Transaction:
     val interp  = KleisliInterpreter[Task](LogHandler.noop).ConnectionInterpreter
     Live(Transactor(connection, connect, interp, Strategy.void), connection)
   }
-  
+
   object Transactional:
     def apply[A](action: ConnectionIO[A]): ZIO[Transaction, Error, A] =
       execute(action)

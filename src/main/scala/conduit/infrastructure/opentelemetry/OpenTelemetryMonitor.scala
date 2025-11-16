@@ -42,7 +42,7 @@ class OpenTelemetryMonitor(tracing: Tracing, meter: Meter) extends Monitor {
       val builder = Attributes.builder()
       tags.foreach { case (k, v) => builder.put(k, v) }
       builder.build()
-      
+
   private def normalizeMetricsName(name: String): String =
     name.toLowerCase.replaceAll("[^a-z0-9_]", "_")
 }

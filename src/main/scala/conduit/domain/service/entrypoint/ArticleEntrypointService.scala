@@ -36,9 +36,9 @@ class ArticleEntrypointService[Tx](
           articleId <- permalinks.resolve(slug) ?! NotFound.article(slug)
           article   <- articles.find(articleId) ?! InconsistentState.noArticle(slug)
           follower   = request.requester.option.map(_.userId).map(Follower(_, article.data.author))
-          following <- ZIO.foreach(follower)(followers.exists).map(_.getOrElse(false))
+          following <- ZIO.foreach(follower)(followers.exists).someOrElse(false)
           favorite   = request.requester.option.map(_.userId).map(FavoriteArticle(_, article.id))
-          favorited <- ZIO.foreach(favorite)(favorites.exists).map(_.getOrElse(false))
+          favorited <- ZIO.foreach(favorite)(favorites.exists).someOrElse(false)
         } yield GetArticleResponse.make(article, favorited, following)
     }
 
@@ -72,10 +72,10 @@ class ArticleEntrypointService[Tx](
     monitor.track("ArticleEndpoint.update") {
       authorise(request):
         for {
-          payload   <- validation.parse(request).validOrFail
-          articleId <- permalinks.resolve(payload.slug) ?! NotFound.article(payload.slug)
-          article   <- articles.find(articleId) ?! InconsistentState.noArticle(payload.slug)
-          patched    = ArticlePatch.apply(article.data, payload.patches)
+          updates   <- validation.parse(request).validOrFail
+          articleId <- permalinks.resolve(updates.slug) ?! NotFound.article(updates.slug)
+          article   <- articles.find(articleId) ?! InconsistentState.noArticle(updates.slug)
+          patched    = ArticlePatch.apply(article.data, updates.patches)
           linked    <- permalinks.exists(articleId, patched.slug)
 
           // If the slug is not yet linked to this article, find the next available slug
@@ -84,7 +84,7 @@ class ArticleEntrypointService[Tx](
           _        <- ZIO.when(!linked)(permalinks.save(article.id, nextSlug))
 
           updated <- articles.save(articleId, patched.copy(slug = nextSlug))
-                       ?! InconsistentState.noArticle(payload.slug)
+                       ?! InconsistentState.noArticle(updates.slug)
         } yield GetArticleResponse.make(updated, false, false)
     }
 
@@ -109,12 +109,12 @@ class ArticleEntrypointService[Tx](
     monitor.track("ArticleEndpoint.delete") {
       authorise(request):
         for {
-          slug     <- validation.parse(request).validOrFail
-          resolved <- permalinks.resolve(slug) ?! NotFound.article(slug)
-          article  <- articles.delete(resolved) ?! InconsistentState.noArticle(slug)
-          _        <- permalinks.delete(article.id)
-          _        <- favorites.deleteByArticle(article.id)
-          _        <- tags.deleteByArticle(article.id)
+          slug      <- validation.parse(request).validOrFail
+          articleId <- permalinks.resolve(slug) ?! NotFound.article(slug)
+          article   <- articles.delete(articleId) ?! InconsistentState.noArticle(slug)
+          _         <- permalinks.delete(article.id)
+          _         <- favorites.deleteByArticle(article.id)
+          _         <- tags.deleteByArticle(article.id)
         } yield DeleteArticleResponse(slug)
     }
 
@@ -123,9 +123,9 @@ class ArticleEntrypointService[Tx](
       authorise(request):
         for {
           slug      <- validation.parse(request).validOrFail
-          resolved  <- permalinks.resolve(slug) ?! NotFound.article(slug)
-          _         <- favorites.add(FavoriteArticle(request.requester.userId, resolved))
-          article   <- articles.find(resolved) ?! InconsistentState.noArticle(slug)
+          articleId <- permalinks.resolve(slug) ?! NotFound.article(slug)
+          _         <- favorites.add(FavoriteArticle(request.requester.userId, articleId))
+          article   <- articles.find(articleId) ?! InconsistentState.noArticle(slug)
           following <- followers.exists(Follower(request.requester.userId, article.data.author))
         } yield GetArticleResponse.make(article, favorited = true, following)
     }
@@ -135,8 +135,8 @@ class ArticleEntrypointService[Tx](
       authorise(request):
         for {
           slug      <- validation.parse(request).validOrFail
-          resolved  <- permalinks.resolve(slug) ?! NotFound.article(slug)
-          article   <- articles.find(resolved) ?! InconsistentState.noArticle(slug)
+          articleId <- permalinks.resolve(slug) ?! NotFound.article(slug)
+          article   <- articles.find(articleId) ?! InconsistentState.noArticle(slug)
           _         <- favorites.delete(FavoriteArticle(request.requester.userId, article.id))
           following <- followers.exists(Follower(request.requester.userId, article.data.author))
         } yield GetArticleResponse.make(article, favorited = false, following)

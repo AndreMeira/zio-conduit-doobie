@@ -21,7 +21,7 @@ class CommentEntrypointService[Tx](
   monitor: Monitor,
   unitOfWork: UnitOfWork[Tx],
   authorisation: CommentAuthorisation[Tx],
-  validator: CommentValidator[Tx],
+  validation: CommentValidator[Tx],
   followers: FollowerRepository[Tx],
   comments: CommentRepository[Tx],
   profiles: UserProfileRepository[Tx],
@@ -32,7 +32,7 @@ class CommentEntrypointService[Tx](
     monitor.track("CommentEndpointService.addComment") {
       authorise(request):
         for {
-          validated  <- validator.parse(request).validOrFail
+          validated  <- validation.parse(request).validOrFail
           slug        = validated.slug
           currentUser = request.requester.userId
           articleId  <- permalinks.resolve(slug) ?! NotFound.article(slug)
@@ -47,7 +47,7 @@ class CommentEntrypointService[Tx](
     monitor.track("CommentEndpointService.deleteComment") {
       authorise(request):
         for {
-          commentId  <- validator.parse(request).validOrFail
+          commentId  <- validation.parse(request).validOrFail
           comment    <- comments.find(commentId) ?! NotFound.comment(commentId)
           articleId   = comment.data.article
           currentUser = request.requester.userId
@@ -61,7 +61,7 @@ class CommentEntrypointService[Tx](
     monitor.track("CommentEndpointService.listComments") {
       authorise(request):
         for {
-          articleSlug  <- validator.parse(request).validOrFail
+          articleSlug  <- validation.parse(request).validOrFail
           article      <- permalinks.resolve(articleSlug) ?! NotFound.article(articleSlug)
           commentsList <- comments.findByArticle(article)
           authorIds     = commentsList.map(_.data.author).map(AuthorId(_))

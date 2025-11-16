@@ -1,6 +1,5 @@
 package conduit.domain.logic.authorisation.definition
 
-import conduit.domain.logic.authorisation
 import conduit.domain.model.error.ApplicationError
 import conduit.domain.model.error.ApplicationError.UnauthorisedError
 import zio.ZIO

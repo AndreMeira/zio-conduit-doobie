@@ -61,14 +61,13 @@ class ArticleRoutes(auth: HttpAuth, parser: RequestParser, logic: ArticleEntrypo
       },
 
       // update article
-      PUT / "articles" / string("slug") -> handler { (slug: String, request: Request) =>
+      PUT / "articles" / string("slug")               -> handler { (slug: String, request: Request) =>
         for {
           user    <- auth.authenticated(request)
           payload <- parser.decode[UpdateArticleRequest.Payload](request)
           result  <- logic.run(UpdateArticleRequest(user, slug, payload))
         } yield Response.json(result.asJson.toString)
       },
-      
       POST / "articles" / string("slug") / "favorite" -> handler { (slug: String, request: Request) =>
         for {
           user   <- auth.authenticated(request)
