@@ -10,6 +10,7 @@ import conduit.domain.model.error.{ InconsistentState, NotFound }
 import conduit.domain.model.patching.ArticlePatch
 import conduit.domain.model.request.article.*
 import conduit.domain.model.response.article.*
+import conduit.domain.model.types.article.ArticleSlug
 import conduit.domain.service.entrypoint.dsl.EntrypointDsl
 import zio.ZIO
 import zio.ZLayer
@@ -72,18 +73,17 @@ class ArticleEntrypointService[Tx](
     monitor.track("ArticleEndpoint.update") {
       authorise(request):
         for {
-          updates   <- validation.parse(request).validOrFail
-          articleId <- permalinks.resolve(updates.slug) ?! NotFound.article(updates.slug)
-          article   <- articles.find(articleId) ?! InconsistentState.noArticle(updates.slug)
-          patched    = ArticlePatch.apply(article.data, updates.patches)
-          linked    <- permalinks.exists(articleId, patched.slug)
+          updates <- validation.parse(request).validOrFail
+          article <- articles.find(updates.id) ?! InconsistentState.noArticle(updates.slug)
+          patched  = ArticlePatch.apply(article.data, updates.patches)
+          linked  <- permalinks.exists(updates.id, patched.slug)
 
           // If the slug is not yet linked to this article, find the next available slug
           nextSlug <- if linked then ZIO.succeed(patched.slug)
                       else slugs.nextAvailable(patched.slug)
           _        <- ZIO.when(!linked)(permalinks.save(article.id, nextSlug))
 
-          updated <- articles.save(articleId, patched.copy(slug = nextSlug))
+          updated <- articles.save(updates.id, patched.copy(slug = nextSlug))
                        ?! InconsistentState.noArticle(updates.slug)
         } yield GetArticleResponse.make(updated, false, false)
     }

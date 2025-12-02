@@ -1,7 +1,7 @@
 package conduit.domain.service.validation
 
 import conduit.domain.logic.monitoring.Monitor
-import conduit.domain.logic.persistence.ArticleRepository
+import conduit.domain.logic.persistence.{ ArticleRepository, PermalinkRepository }
 import conduit.domain.logic.persistence.ArticleRepository.Search
 import conduit.domain.logic.validation.ArticleValidator
 import conduit.domain.model.entity.Article
@@ -20,8 +20,11 @@ import scala.util.chaining.scalaUtilChainingOps
 class ArticleValidationService[Tx](
   monitor: Monitor,
   val articles: ArticleRepository[Tx],
+  val permalinks: PermalinkRepository[Tx],
 ) extends ArticleValidator[Tx] {
-  override type Error = articles.Error // can only fail with the same errors as the injected repository
+
+  // can only fail with the same errors as the injected repositories
+  override type Error = articles.Error | permalinks.Error
 
   override def parse(request: GetArticleRequest): Result[ArticleSlug] =
     monitor.track("ArticleValidationService.validateGet") {
@@ -94,17 +97,18 @@ class ArticleValidationService[Tx](
       }
     }
 
-  override def parse(request: UpdateArticleRequest): Result[PatchWithSlug] =
+  override def parse(request: UpdateArticleRequest): Result[PatchArticle] =
     monitor.track("ArticleValidationService.validateUpdate") {
+      val slug       = ArticleSlug(request.slug)
       val authorId   = AuthorId(request.requester.userId)
       val maybeTitle = request.payload.article.title.option.map(ArticleTitle(_))
 
-      validateArticleDoesNotExist(maybeTitle, authorId).map { uniqueness =>
-        val patches = validatePatches(request)
-        Validation
-          .validate(uniqueness, patches) // combine all validations
-          .map((_, patches) => (slug = ArticleSlug(request.slug), patches = patches))
-      }
+      for {
+        articleId <- resolveSlug(slug)
+        unique    <- validateArticleDoesNotExist(maybeTitle, authorId)
+      } yield Validation
+        .validate(unique, articleId, validatePatches(request)) // combine all validations
+        .map((_, articleId, patches) => (id = articleId, slug = slug, patches = patches))
     }
 
   private def validateArticleData(request: CreateArticleRequest): Validation[ValidationError, Article.Data] =
@@ -134,6 +138,13 @@ class ArticleValidationService[Tx](
       case None        => ZIO.succeed(Validation.succeed(())) // no title means no change, so no need to check uniqueness
       case Some(title) => validateArticleDoesNotExist(title, authorId)
 
+  private def resolveSlug(slug: ArticleSlug): Result[ArticleId] =
+    permalinks
+      .resolve(slug)
+      .map:
+        case Some(articleId) => Validation.succeed(articleId)
+        case None            => Validation.fail(Invalid.ArticleNotFound(slug))
+
   private def validateArticleDoesNotExist(title: ArticleTitle, authorId: AuthorId): Result[Unit] =
     articles
       .titleExists(title, authorId)
@@ -147,19 +158,23 @@ class ArticleValidationService[Tx](
 
 object ArticleValidationService:
   enum Invalid extends ValidationError {
+    case ArticleNotFound(slug: ArticleSlug)
     case ArticleAlreadyExists(title: ArticleTitle, authorId: AuthorId)
 
     override def key: String = this match
       case ArticleAlreadyExists(_, _) => "article.title"
+      case ArticleNotFound(_)         => "article.slug"
 
     override def message: String = this match
+      case ArticleNotFound(slug)               => s"Article with slug $slug not found"
       case ArticleAlreadyExists(title, author) => s"Author '$author' already has an article with title '${title}'"
   }
 
-  def layer[Tx: ReflectionTag]: ZLayer[ArticleRepository[Tx] & Monitor, Nothing, ArticleValidator[Tx]] =
+  def layer[Tx: ReflectionTag]: ZLayer[ArticleRepository[Tx] & PermalinkRepository[Tx] & Monitor, Nothing, ArticleValidator[Tx]] =
     ZLayer {
       for
-        monitor  <- ZIO.service[Monitor]
-        articles <- ZIO.service[ArticleRepository[Tx]]
-      yield ArticleValidationService(monitor, articles)
+        monitor    <- ZIO.service[Monitor]
+        articles   <- ZIO.service[ArticleRepository[Tx]]
+        permalinks <- ZIO.service[PermalinkRepository[Tx]]
+      yield ArticleValidationService(monitor, articles, permalinks)
     }

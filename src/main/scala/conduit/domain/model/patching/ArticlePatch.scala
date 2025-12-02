@@ -23,11 +23,11 @@ enum ArticlePatch:
       case ArticlePatch.Slug(value)        => data.copy(slug = value)
 
 object ArticlePatch:
-  def apply(value: Article.Data, patches: List[ArticlePatch]): Article.Data =
-    patches.foldLeft(value)((d, p) => p.apply(d))
+  def apply(articleData: Article.Data, patches: List[ArticlePatch]): Article.Data =
+    patches.foldLeft(articleData)((articleData, patch) => patch.apply(articleData))
 
   def apply(article: Article, patches: List[ArticlePatch]): Article =
-    article.copy(data = apply(article.data, patches))
+    article.copy(data = ArticlePatch.apply(article.data, patches))
 
   def title(value: String): Validation[ArticleTitle.Error, ArticlePatch.Title] =
     ArticleTitle.fromString(value).map(ArticlePatch.Title.apply)

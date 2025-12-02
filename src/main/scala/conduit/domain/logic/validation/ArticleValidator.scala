@@ -6,7 +6,7 @@ import conduit.domain.model.error.ApplicationError.{ TransientError, ValidationE
 import conduit.domain.model.error.{ ApplicationError, InvalidInput }
 import conduit.domain.model.patching.ArticlePatch
 import conduit.domain.model.request.article.*
-import conduit.domain.model.types.article.{ ArticleSlug, ArticleTag }
+import conduit.domain.model.types.article.{ ArticleId, ArticleSlug, ArticleTag }
 import conduit.domain.model.types.user.UserId
 import zio.ZIO
 import zio.prelude.Validation
@@ -18,12 +18,12 @@ trait ArticleValidator[Tx] {
   protected type Validated[A] = Validation[ValidationError, A]
   protected type Result[A]    = ZIO[Tx, Error, Validated[A]]
 
-  protected type PatchWithSlug   = (slug: ArticleSlug, patches: List[ArticlePatch])                   // for readability purpose only
+  protected type PatchArticle    = (id: ArticleId, slug: ArticleSlug, patches: List[ArticlePatch])    // for readability purpose only
   protected type ArticleWithTags = (article: Article.Data, tags: List[ArticleTag])                    // for readability purpose only
   protected type SearchQuery     = (filters: List[ArticleRepository.Search], limit: Int, offset: Int) // for readability purpose only
   protected type FeedQuery       = (userId: UserId, limit: Int, offset: Int)                          // for readability purpose only
 
-  def parse(request: UpdateArticleRequest): Result[PatchWithSlug]
+  def parse(request: UpdateArticleRequest): Result[PatchArticle]
   def parse(request: CreateArticleRequest): Result[ArticleWithTags]
   def parse(request: GetArticleRequest): Result[ArticleSlug]
   def parse(request: DeleteArticleRequest): Result[ArticleSlug]
