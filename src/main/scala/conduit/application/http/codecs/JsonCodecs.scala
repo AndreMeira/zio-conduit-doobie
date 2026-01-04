@@ -109,7 +109,7 @@ object JsonCodecs {
 
   // helper to decode Patchable fields
   extension (cursor: io.circe.HCursor)
-    private def patchable[A](field: String)(using d: Decoder[A]): Either[DecodingFailure, Patchable[A]] =
+    private def patchable[A: Decoder](field: String): Either[DecodingFailure, Patchable[A]] =
       cursor
         .get[Option[A]](field)
         .map:

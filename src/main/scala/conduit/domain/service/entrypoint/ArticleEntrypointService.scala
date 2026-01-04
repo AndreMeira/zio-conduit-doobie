@@ -36,7 +36,7 @@ class ArticleEntrypointService[Tx](
           slug      <- validation.parse(request).validOrFail
           articleId <- permalinks.resolve(slug) ?! NotFound.article(slug)
           article   <- articles.find(articleId) ?! InconsistentState.noArticle(slug)
-          follower   = request.requester.option.map(_.userId).map(Follower(_, article.data.author))
+          follower   = request.requester.option.map(user => Follower(user.userId, article.data.author))
           following <- ZIO.foreach(follower)(followers.exists).someOrElse(false)
           favorite   = request.requester.option.map(_.userId).map(FavoriteArticle(_, article.id))
           favorited <- ZIO.foreach(favorite)(favorites.exists).someOrElse(false)

@@ -17,7 +17,7 @@ trait UserValidator[Tx] {
   protected type Result[A]    = ZIO[Tx, Error, Validated[A]]
 
   protected type Patches      = (profile: List[UserProfilePatch], creds: List[CredentialsPatch])
-  protected type Registration = (user: UserProfile.Data, creds: Credentials.Clear) // for readability only
+  protected type Registration = (user: UserProfile.Data, creds: Credentials.Clear)
 
   def parse(request: FollowUserRequest): Result[UserName]
   def parse(request: UnfollowUserRequest): Result[UserName]

@@ -39,9 +39,6 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
-  def local2: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] =
-    migration *> live
-
   def local: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] = ZIO.scoped {
     {
       for {
@@ -99,7 +96,7 @@ object HttpApplication extends ZIOAppDefault {
   override def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     getArgs.flatMap:
       case Chunk("inmemory")  => inmemory
-      case Chunk("local")     => local2
+      case Chunk("local")     => local
       case Chunk("migration") => migration
       case Chunk("live")      => live
       case _                  => ZIO.logError("Please specify what to run")

@@ -149,8 +149,8 @@ class ArticleValidationService[Tx](
     articles
       .titleExists(title, authorId)
       .map:
-        case true  => Validation.fail(Invalid.ArticleAlreadyExists(title, authorId))
         case false => Validation.succeed(())
+        case true  => Validation.fail(Invalid.ArticleAlreadyExists(title, authorId))
 
   private def validateArticleTags(tags: List[String]): Validation[ValidationError, List[ArticleTag]] =
     Validation.validateAll(tags.map(ArticleTag.fromString))

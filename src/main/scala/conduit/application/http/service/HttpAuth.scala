@@ -28,10 +28,9 @@ class HttpAuth(monitor: Monitor, val auth: TokenAuthenticator[Any]) {
    */
   def authenticated(request: Request): Result[User.Authenticated] =
     monitor.track("HttpAuth.authenticated"):
-      currentUser(request).flatMap {
+      currentUser(request).flatMap:
         case user: User.Authenticated => ZIO.succeed(user)
         case User.Anonymous           => ZIO.fail(Failure.AccessDenied("Authentication required"))
-      }
 
   /**
    * Requires an anonymous user (not authenticated).
@@ -39,11 +38,13 @@ class HttpAuth(monitor: Monitor, val auth: TokenAuthenticator[Any]) {
    */
   def anonymous(request: Request): Result[User.Anonymous.type] =
     monitor.track("HttpAuth.anonymous"):
-      currentUser(request).flatMap {
+      currentUser(request).flatMap:
         case User.Anonymous        => ZIO.succeed(User.Anonymous)
         case _: User.Authenticated => ZIO.fail(Failure.AccessDenied("User must be anonymous"))
-      }
 
+  /**
+   * Try to extract the current user.
+   */
   private def currentUser(request: Request): Result[User] = {
     val token  = request.headers.get("Authorization")
     val signed = token.map(SignedToken.fromString(_, "Token"))

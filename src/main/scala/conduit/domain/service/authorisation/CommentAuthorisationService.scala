@@ -30,9 +30,10 @@ class CommentAuthorisationService[Tx](
     }
 
   private def canDeleteComment(request: DeleteCommentRequest): Result = {
-    val author = CommentAuthorId(request.requester.userId)
-    val reason = s"Comment ${request.commentId} does not belong to user ${request.requester.userId}"
-    comments.exists(CommentId(request.commentId), author).map {
+    val comment = CommentId(request.commentId)
+    val author  = CommentAuthorId(request.requester.userId)
+    val reason  = s"Comment ${request.commentId} does not belong to user ${request.requester.userId}"
+    comments.exists(comment, author).map {
       case true  => Authorisation.Result.Allowed
       case false => Authorisation.Result.Denied(Failure.CanNotDeleteComment(reason))
     }

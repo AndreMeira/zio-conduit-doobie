@@ -23,7 +23,7 @@ object PostgresSpecLayers {
         }
   }
 
-  val migrationConfig: ZLayer[PostgreSQLContainer, Nothing, MigrationConfig]       = ZLayer {
+  val migrationConfig: ZLayer[PostgreSQLContainer, Nothing, MigrationConfig] = ZLayer {
     ZIO.service[PostgreSQLContainer].map { container =>
       MigrationConfig(
         initSql = "",
@@ -33,6 +33,7 @@ object PostgresSpecLayers {
       )
     }
   }
+
   val datasourceConfig: ZLayer[PostgreSQLContainer, Nothing, DatabaseSourceConfig] = ZLayer {
     ZIO.service[PostgreSQLContainer].map { container =>
       DatabaseSourceConfig(
