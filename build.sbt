@@ -1,6 +1,5 @@
 val scala3Version         = "3.7.2"
 val zioVersion            = "2.1.24"
-val zioJsonVersion        = "0.8.0"
 val zioConfigVersion      = "4.0.6"
 val zioLoggingVersion     = "2.5.2"
 val logbackClassicVersion = "1.5.23"
@@ -49,7 +48,6 @@ lazy val root = project
       "dev.zio"       %% "zio-streams"     % zioVersion,
       "dev.zio"       %% "zio-http"        % zioHttpVersion,
       "ch.qos.logback" % "logback-classic" % logbackClassicVersion,
-      "dev.zio"       %% "zio-json"        % zioJsonVersion,
 
       // databases
       "com.zaxxer"     % "HikariCP"         % "7.0.2",
