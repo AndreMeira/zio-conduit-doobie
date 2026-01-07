@@ -13,7 +13,23 @@ import izumi.reflect.Tag as ReflectionTag
 import zio.*
 import zio.http.{ Middleware, Routes, Server }
 
+/**
+ * Main HTTP application for the Conduit system.
+ *
+ * This object serves as the entry point for running the Conduit API server
+ * in different modes (inmemory, local development, production, migration-only).
+ * It uses ZIO's dependency injection to wire together all layers of the application.
+ */
 object HttpApplication extends ZIOAppDefault {
+
+  /**
+   * Combines all HTTP routes into a single Routes instance.
+   *
+   * Aggregates user, article, and comment routes into a unified
+   * routing structure for the HTTP server.
+   *
+   * @return Combined routes from all modules
+   */
   def routes: ZIO[UserRoutes & ArticleRoutes & CommentRoutes, Nothing, Routes[Any, ApplicationError]] =
     for {
       commentRoutes <- ZIO.service[CommentRoutes]
@@ -21,6 +37,14 @@ object HttpApplication extends ZIOAppDefault {
       userRoutes    <- ZIO.service[UserRoutes]
     } yield commentRoutes.routes ++ articleRoutes.routes ++ userRoutes.routes
 
+  /**
+   * Runs the application in inmemory mode for testing and development.
+   *
+   * Uses in-memory storage instead of a database, making it suitable for
+   * rapid development and testing. Includes tracing routes and CORS support.
+   *
+   * @return ZIO effect that runs the server until interrupted
+   */
   def inmemory: ZIO[Scope, Throwable, Unit] = ZIO.scoped {
     {
       for {
@@ -39,6 +63,15 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  /**
+   * Runs the application in local development mode with PostgreSQL.
+   *
+   * Applies database migrations and runs the server with full monitoring
+   * and PostgreSQL persistence. Suitable for local development that needs
+   * database state persistence.
+   *
+   * @return ZIO effect that runs the server until interrupted
+   */
   def local: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] = ZIO.scoped {
     {
       for {
@@ -61,6 +94,14 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  /**
+   * Runs database migrations only without starting the HTTP server.
+   *
+   * Useful for deployment pipelines where database schema needs to be
+   * updated before starting the application servers.
+   *
+   * @return ZIO effect that applies migrations and exits
+   */
   def migration: ZIO[Scope, Throwable | PostgresMigration.Error, Unit] = ZIO.scoped {
     {
       for {
@@ -74,6 +115,15 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  /**
+   * Runs the application in production mode.
+   *
+   * Full production setup with PostgreSQL persistence, monitoring,
+   * and all production-ready middleware. Database migrations are
+   * expected to have been run separately.
+   *
+   * @return ZIO effect that runs the server until interrupted
+   */
   def live: ZIO[Scope, Throwable, Unit] = ZIO.scoped {
     {
       for {
@@ -93,6 +143,17 @@ object HttpApplication extends ZIOAppDefault {
     )
   }
 
+  /**
+   * Application entry point that dispatches to the appropriate mode.
+   *
+   * Examines command line arguments to determine which mode to run:
+   * - "inmemory": In-memory mode for testing
+   * - "local": Local development with database
+   * - "migration": Run migrations only
+   * - "live": Production mode
+   *
+   * @return ZIO effect based on the selected mode
+   */
   override def run: ZIO[ZIOAppArgs & Scope, Any, Any] =
     getArgs.flatMap:
       case Chunk("inmemory")  => inmemory

@@ -108,7 +108,7 @@ class ArticleValidationService[Tx](
         unique    <- validateArticleDoesNotExist(maybeTitle, authorId)
       } yield Validation
         .validate(unique, articleId, validatePatches(request)) // combine all validations
-        .map((_, articleId, patches) => (id = articleId, slug = slug, patches = patches))
+        .map((_, articleId, patches) => (articleId, slug, patches))
     }
 
   private def validateArticleData(request: CreateArticleRequest): Validation[ValidationError, Article.Data] =
